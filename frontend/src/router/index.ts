@@ -1,19 +1,18 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
-import Home from "../views/Home.vue";
-import Advertising from "../views/Advertising.vue";
-import Sites from "../views/Sites.vue";
-import MobileApp from "../views/MobileApp.vue";
+import { createRouter, createWebHistory } from 'vue-router'
+import HomeView from '@/views/HomeView.vue'
 
-const routes: RouteRecordRaw[] = [
-    { path: "/", component: Home },
-    { path: "/advertising", component: Advertising },
-    { path: "/sites", component: Sites },
-    { path: "/mobileapp", component: MobileApp },
-];
+const routes = [
+    { path: '/', component: HomeView },
+    // заглушки на будущее
+    { path: '/advertising', component: HomeView },
+    { path: '/audit', component: HomeView },
+    { path: '/sites', component: HomeView },
+    { path: '/mobileapp', component: HomeView },
+]
 
 const router = createRouter({
     history: createWebHistory(),
     routes,
-});
+})
 
-export default router;
+export default router

@@ -1,9 +1,7 @@
 <template>
   <router-link
       :to="to"
-      class="block p-8 text-2xl font-semibold text-center rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700
-           bg-white dark:bg-gray-800 hover:-translate-y-1 hover:shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700
-           transition-all duration-300"
+      class="bg-gray-100 dark:bg-gray-800 rounded-2xl shadow-md p-8 text-center text-xl font-semibold transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl"
   >
     {{ title }}
   </router-link>
@@ -11,7 +9,7 @@
 
 <script setup lang="ts">
 defineProps<{
-  title: string;
-  to: string;
-}>();
+  title: string
+  to: string
+}>()
 </script>
