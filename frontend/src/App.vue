@@ -1,16 +1,14 @@
 <template>
-  <div :class="{ dark: isDark }">
-    <div class="min-h-screen bg-white text-black dark:bg-gray-900 dark:text-white transition-colors duration-300">
-      <div class="p-4 flex justify-end">
-        <button
-            @click="toggleTheme"
-            class="px-4 py-2 rounded border border-gray-300 dark:border-gray-600"
-        >
-          {{ isDark ? '🌙 Dark' : '☀️ Light' }}
-        </button>
-      </div>
-      <router-view />
+  <div class="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+    <div class="p-4 text-right">
+      <button
+          @click="toggleDark"
+          class="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+      >
+        {{ isDark ? '🌙 Dark' : '☀️ Light' }}
+      </button>
     </div>
+    <router-view />
   </div>
 </template>
 
@@ -19,13 +17,14 @@ import { ref, onMounted } from 'vue'
 
 const isDark = ref(false)
 
-onMounted(() => {
-  const stored = localStorage.getItem('theme')
-  isDark.value = stored === 'dark' || (stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
-})
-
-function toggleTheme() {
+const toggleDark = () => {
   isDark.value = !isDark.value
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+  document.documentElement.classList.toggle('dark', isDark.value)
 }
+
+onMounted(() => {
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  isDark.value = prefersDark
+  document.documentElement.classList.toggle('dark', prefersDark)
+})
 </script>
