@@ -1,0 +1,43 @@
+services:
+  tarantool-router:
+    build:
+      context: ./tarantool
+    container_name: tarantool-router
+    ports:
+      - "3301:3301"
+      - "8081:8081"
+    networks:
+      - app-net
+
+  tarantool-storage-a:
+    build:
+      context: ./tarantool
+    container_name: tarantool-storage-a
+    environment:
+      - TARANTOOL_INSTANCE=storage-a
+    networks:
+      - app-net
+
+  tarantool-storage-b:
+    build:
+      context: ./tarantool
+    container_name: tarantool-storage-b
+    environment:
+      - TARANTOOL_INSTANCE=storage-b
+    networks:
+      - app-net
+
+  go-backend:
+    build:
+      context: ./backend
+    container_name: go-backend
+    ports:
+      - "8080:8080"
+    networks:
+      - app-net
+    depends_on:
+      - tarantool-router
+
+networks:
+  app-net:
+    driver: bridge

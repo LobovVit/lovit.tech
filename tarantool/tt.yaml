@@ -1,0 +1,40 @@
+App:
+  name: lovit_app
+
+  work_dir: /var/lib/tarantool
+  log_dir: /var/log/tarantool
+  wal_dir: /var/lib/tarantool/wal
+  memtx_dir: /var/lib/tarantool/memtx
+  vinyl_dir: /var/lib/tarantool/vinyl
+  bin_dir: /usr/local/bin
+
+  instances:
+    router:
+      script: init.lua
+      advertise_uri: router:3301
+      http_port: 8081
+      roles: [router]
+      sharding:
+        bucket_count: 3000
+        discovery_mode: off
+        replicasets:
+          lovit_replicaset_a:
+            instances:
+              storage-a:
+                uri: storage-a:3301
+                zone: zone1
+          lovit_replicaset_b:
+            instances:
+              storage-b:
+                uri: storage-b:3301
+                zone: zone2
+
+    storage-a:
+      script: init.lua
+      advertise_uri: storage-a:3301
+      roles: [storage]
+
+    storage-b:
+      script: init.lua
+      advertise_uri: storage-b:3301
+      roles: [storage]
