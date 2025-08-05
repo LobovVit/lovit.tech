@@ -1,0 +1,59 @@
+:root {
+    --bg-light: #f5f5f5;
+    --bg-dark: #222;
+    --fg-light: #222;
+    --fg-dark: #f5f5f5;
+    --tile-size: 200px;
+}
+[data-theme="light"] {
+    background: var(--bg-light);
+    color: var(--fg-light);
+}
+[data-theme="dark"] {
+    background: var(--bg-dark);
+    color: var(--fg-dark);
+}
+body {
+    margin: 0;
+    font-family: sans-serif;
+    transition: background .3s, color .3s;
+}
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+}
+.tiles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    padding: 2rem;
+}
+.tile {
+    width: var(--tile-size);
+    height: var(--tile-size);
+    background: rgba(255,255,255,.8);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transform: translateY(50px);
+    opacity: 0;
+    transition: transform .5s ease, opacity .5s ease;
+}
+/* когда в области видимости — «появиться» */
+.tile.visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+.tile:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0,0,0,.2);
+}
+#content {
+    padding: 2rem;
+}

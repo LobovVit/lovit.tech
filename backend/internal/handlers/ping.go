@@ -10,7 +10,7 @@ import (
 
 	"backend/internal/db"
 
-	vshardrouter "github.com/tarantool/go-vshard-router/v2"
+	vshardrouter "github.com/tarantool/go-vshard-index/v2"
 )
 
 type GetUserRequest struct {
@@ -51,7 +51,7 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 		vshardrouter.CallOpts{},
 	)
 	if err != nil {
-		http.Error(w, "router error: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "index error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 

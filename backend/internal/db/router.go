@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	router "github.com/tarantool/go-vshard-router/v2"
+	router "github.com/tarantool/go-vshard-index/v2"
 )
 
 func GetFirstUser() (interface{}, error) {
