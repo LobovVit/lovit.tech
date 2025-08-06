@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"github.com/tarantool/go-tarantool/v2"
-	vshardrouter "github.com/tarantool/go-vshard-router/v2"
+	vshardrouter "github.com/tarantool/go-vshard-index/v2"
 	"github.com/tarantool/go-vshard-router/v2/providers/static"
 	"log"
 	"time"
@@ -35,6 +35,6 @@ func InitRouter() error {
 	}
 
 	Router = router
-	log.Println("✅ Tarantool router инициализирован")
+	log.Println("✅ Tarantool index инициализирован")
 	return nil
 }

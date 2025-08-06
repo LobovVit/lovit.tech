@@ -1,0 +1,149 @@
+:root {
+    --bg-start: #f0f3f5;
+    --bg-end:   #d9e2ec;
+    --glass:    rgba(255,255,255,0.6);
+    --glass-d:  rgba(28,28,30,0.6);
+    --border:   rgba(255,255,255,0.4);
+    --tile-size: 4.5rem;
+    --bg-scale: 150%;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-image:
+            url("images/back-light.jpg"),
+            linear-gradient(135deg, var(--bg-start), var(--bg-end));
+    background-position: 50% 50%, center center;
+    background-repeat: no-repeat, no-repeat;
+    background-size: cover, cover;
+    background-attachment: fixed, fixed;
+    color: #1c1c1e;
+    transition: background .3s, color .3s;
+    animation: float-bg 60s ease-in-out infinite;
+}
+
+[data-theme="dark"] {
+    background-image:
+            url("images/back-dark.jpg"),
+            linear-gradient(135deg, #1c1c1e, #2c2c2e);
+    background-position: 50% 50%, center center;
+    background-repeat: no-repeat, no-repeat;
+    background-size: cover, cover;
+    background-attachment: fixed, fixed;
+    color: #f2f2f7;
+    transition: background .3s, color .3s;
+    animation: float-bg 60s ease-in-out infinite;
+}
+
+header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    backdrop-filter: blur(10px);
+    background: var(--glass);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    gap: 1rem;
+}
+
+[data-theme="dark"] header {
+    background: var(--glass-d);
+    border-color: rgba(44,44,46,0.4);
+}
+
+header h1 {
+    flex: 1;
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+#theme-toggle {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+}
+
+.tiles {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.tile {
+    width: var(--tile-size);
+    height: var(--tile-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    cursor: pointer;
+    transform: translateY(-100%);
+    opacity: 0;
+    transition: transform .5s ease-out, opacity .5s ease-out;
+}
+
+.tile.visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.tile:hover {
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+main {
+    padding: 6rem 1rem 2rem;
+}
+
+.section-block {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    border-radius: 1rem;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    transform: translateY(50px);
+    opacity: 0;
+    transition: transform .6s cubic-bezier(.22,1,.36,1), opacity .6s ease;
+}
+
+.section-block.visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+@keyframes float-bg {
+    0%   { background-position: 50% 50%; }
+    5%   { background-position: 55% 50%; }  /* вправо */
+    10%  { background-position: 60% 55%; }  /* вправо+вниз */
+    15%  { background-position: 65% 60%; }  /* вниз */
+    20%  { background-position: 60% 65%; }  /* влево+вниз */
+    25%  { background-position: 55% 70%; }
+    30%  { background-position: 50% 75%; }
+    35%  { background-position: 45% 70%; }
+    40%  { background-position: 40% 65%; }
+    45%  { background-position: 35% 60%; }
+    50%  { background-position: 30% 55%; }  /* влево */
+    55%  { background-position: 35% 50%; }  /* влево+вверх */
+    60%  { background-position: 40% 45%; }
+    65%  { background-position: 45% 40%; }
+    70%  { background-position: 50% 35%; }  /* вверх */
+    75%  { background-position: 55% 40%; }
+    80%  { background-position: 60% 45%; }
+    85%  { background-position: 65% 50%; }  /* вправо+вверх */
+    90%  { background-position: 60% 55%; }
+    95%  { background-position: 55% 60%; }
+    100% { background-position: 50% 50%; }
+}

@@ -18,4 +18,4 @@ RUN tt rocks install vshard
 COPY . /app
 
 # Стартуем через tt
-CMD ["tt", "start", "router"]
+CMD ["tt", "start", "index"]

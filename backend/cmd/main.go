@@ -10,7 +10,7 @@ import (
 
 func main() {
 	if err := db.InitRouter(); err != nil {
-		log.Fatalf("❌ Не удалось инициализировать router: %v", err)
+		log.Fatalf("❌ Не удалось инициализировать index: %v", err)
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ping", handlers.PingHandler)

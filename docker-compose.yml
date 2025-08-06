@@ -2,7 +2,7 @@ services:
   tarantool-router:
     build:
       context: ./tarantool
-    container_name: tarantool-router
+    container_name: tarantool-index
     ports:
       - "3301:3301"
       - "8081:8081"

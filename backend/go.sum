@@ -14,7 +14,8 @@ github.com/tarantool/go-iproto v1.1.0 h1:HULVOIHsiehI+FnHfM7wMDntuzUddO09DKqu2Wn
 github.com/tarantool/go-iproto v1.1.0/go.mod h1:LNCtdyZxojUed8SbOiYHoc3v9NvaZTB7p96hUySMlIo=
 github.com/tarantool/go-tarantool/v2 v2.3.0 h1:oLEWqQ5rQGT05JdSPaKXNSJyqCXTN7oDWgS11WPlAgk=
 github.com/tarantool/go-tarantool/v2 v2.3.0/go.mod h1:hKKeZeCP8Y8+U6ZFS32ot1jHV/n4WKVP4fjRAvQznMY=
-github.com/tarantool/go-vshard-router/v2 v2.0.5 h1:DQMJdfiC0e15nh5hhlDPTRikJmh+xUp7jYdOUvZaM1o=
+github.com/tarantool/go-vshard-index/v2 v2.0.5 h1:DQMJdfiC0e15nh5hhlDPTRikJmh+xUp7jYdOUvZaM1o=
+github.com/tarantool/go-vshard-index/v2 v2.0.5/go.mod h1:eZx8zVXYx+X2nj91n4gaN9HrEeDN0bbSBGj0wK8T2wQ=
 github.com/tarantool/go-vshard-router/v2 v2.0.5/go.mod h1:eZx8zVXYx+X2nj91n4gaN9HrEeDN0bbSBGj0wK8T2wQ=
 github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IUPn0Bjt8=
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=

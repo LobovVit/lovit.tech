@@ -11,9 +11,9 @@ App:
   instances:
     router:
       script: init.lua
-      advertise_uri: router:3301
+      advertise_uri: index:3301
       http_port: 8081
-      roles: [router]
+      roles: [index]
       sharding:
         bucket_count: 3000
         discovery_mode: off

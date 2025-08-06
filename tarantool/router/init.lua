@@ -31,7 +31,7 @@ if ok and rawget(_G, 'vshard') then
             sync_timeout = 1,
         }, box.info.uuid)
     else
-        vshard.router.cfg({
+        vshard.index.cfg({
             sharding = {}, -- будет заполнено из tt.yaml
             bucket_count = 3000
         })

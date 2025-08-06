@@ -1,13 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
+<html lang="ru">
+<head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lovit App</title>
-  </head>
-  <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+    <title>Lovit.tech</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body data-theme="light">
+<header>
+    <h1>Lovit.tech</h1>
+    <nav class="tiles">
+        <div class="tile" data-target="advertising">Реклама</div>
+        <div class="tile" data-target="audit">Аудит</div>
+        <div class="tile" data-target="sites">Сайты</div>
+        <div class="tile" data-target="mobileapp">Моб. приложения</div>
+    </nav>
+    <button id="theme-toggle" aria-label="Переключить тему">🌓</button>
+</header>
+<main>
+    <section id="advertising" class="section-block">
+        <h2>Реклама</h2>
+        <p>Контент блока «Реклама»…</p>
+    </section>
+    <section id="audit" class="section-block">
+        <h2>Аудит рекламных кампаний</h2>
+        <p>Контент блока «Аудит»…</p>
+    </section>
+    <section id="sites" class="section-block">
+        <h2>Создание сайтов</h2>
+        <p>Контент блока «Сайты»…</p>
+    </section>
+    <section id="mobileapp" class="section-block">
+        <h2>Мобильные приложения</h2>
+        <p>Контент блока «Моб. Приложения»…</p>
+    </section>
+</main>
+<script src="script.js"></script>
+</body>
 </html>
