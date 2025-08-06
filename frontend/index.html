@@ -9,16 +9,31 @@
 <body data-theme="light">
 <header>
     <h1>Lovit.tech</h1>
-    <button id="theme-toggle">🌓</button>
+    <button id="theme-toggle" aria-label="Переключить тему">🌓</button>
+    <nav class="tiles">
+        <div class="tile" data-target="advertising">Реклама</div>
+        <div class="tile" data-target="audit">Аудит</div>
+        <div class="tile" data-target="sites">Сайты</div>
+        <div class="tile" data-target="mobileapp">Моб. приложения</div>
+    </nav>
 </header>
 <main>
-    <div class="tiles">
-        <div class="tile" data-endpoint="/advertising">Реклама</div>
-        <div class="tile" data-endpoint="/audit">Аудит</div>
-        <div class="tile" data-endpoint="/sites">Сайты</div>
-        <div class="tile" data-endpoint="/mobileapp">Моб. приложения</div>
-    </div>
-    <section id="content"></section>
+    <section id="advertising" class="section-block">
+        <h2>Реклама</h2>
+        <p>Контент блока «Реклама»…</p>
+    </section>
+    <section id="audit" class="section-block">
+        <h2>Аудит рекламных кампаний</h2>
+        <p>Контент блока «Аудит»…</p>
+    </section>
+    <section id="sites" class="section-block">
+        <h2>Создание сайтов</h2>
+        <p>Контент блока «Сайты»…</p>
+    </section>
+    <section id="mobileapp" class="section-block">
+        <h2>Мобильные приложения</h2>
+        <p>Контент блока «Моб. приложения»…</p>
+    </section>
 </main>
 <script src="script.js"></script>
 </body>
