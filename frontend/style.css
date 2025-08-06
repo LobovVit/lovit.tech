@@ -12,22 +12,18 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     /* Комбинируем градиент + картинку: картинка сверху */
     background:
-            url('/images/sequoia-day.png') center center/cover no-repeat,
+            url("images/back-light.jpg") center center/cover no-repeat,
             linear-gradient(135deg, var(--bg-start), var(--bg-end));
     color: #1c1c1e;
     transition: background .3s, color .3s;
 }
 
-[data-theme="dark"] body {
+[data-theme="dark"] {
     background:
-            url('/images/sequoia-night.png') center center/cover no-repeat,
+            url("images/back-dark.jpg") center center/cover no-repeat,
             linear-gradient(135deg, #1c1c1e, #2c2c2e);
     color: #f2f2f7;
-}
-
-[data-theme="dark"] {
-    background: linear-gradient(135deg, #1c1c1e, #2c2c2e);
-    color: #f2f2f7;
+    transition: background .3s, color .3s;
 }
 
 header {
