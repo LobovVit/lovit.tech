@@ -36,75 +36,79 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
 
-          # PRIVATE KEYS
+          # private keys
           printf '%s\n' "$VPS_SSH_KEY"  > "$HOME/.ssh/vps_key"
           printf '%s\n' "$HOME_SSH_KEY" > "$HOME/.ssh/home_key"
           chmod 600 "$HOME/.ssh/vps_key" "$HOME/.ssh/home_key"
 
-          # PORTS with defaults
+          # ports with defaults
           VPS_PORT="${VPS_SSH_PORT:-22}"
           HOME_PORT="${HOME_SSH_PORT:-22}"
 
-          # KNOWN_HOSTS
+          # known_hosts
           ssh-keyscan -p "$VPS_PORT"  "$VPS_HOST"  >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
           ssh-keyscan -p "$HOME_PORT" "$HOME_HOST" >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
           chmod 644 "$HOME/.ssh/known_hosts"
 
-          # SSH CONFIG
-          cat > "$HOME/.ssh/config" <<CFG
-  Host vps
-  HostName $VPS_HOST
-  User $VPS_USER
-  Port $VPS_PORT
-  IdentityFile $HOME/.ssh/vps_key
-  StrictHostKeyChecking yes
-  ServerAliveInterval 30
-  ServerAliveCountMax 6
-  
-  Host home
-  HostName $HOME_HOST
-  User $HOME_USER
-  Port $HOME_PORT
-  IdentityFile $HOME/.ssh/home_key
-  ProxyJump vps
-  StrictHostKeyChecking yes
-  ServerAliveInterval 30
-  ServerAliveCountMax 6
-  CFG
-  chmod 600 "$HOME/.ssh/config"
+          # ssh config
+          cat > "$HOME/.ssh/config" <<'CFG'
+          Host vps
+            HostName ${VPS_HOST}
+            User ${VPS_USER}
+            Port ${VPS_PORT}
+            IdentityFile ~/.ssh/vps_key
+            StrictHostKeyChecking yes
+            ServerAliveInterval 30
+            ServerAliveCountMax 6
 
-- name: Smoke SSH
-  shell: bash
-  run: |
-    set -euo pipefail
-    ssh -F "$HOME/.ssh/config" vps  "echo VPS OK: \$(hostname)"
-    ssh -F "$HOME/.ssh/config" home "echo HOME OK: \$(hostname)"
+          Host home
+            HostName ${HOME_HOST}
+            User ${HOME_USER}
+            Port ${HOME_PORT}
+            IdentityFile ~/.ssh/home_key
+            ProxyJump vps
+            StrictHostKeyChecking yes
+            ServerAliveInterval 30
+            ServerAliveCountMax 6
+          CFG
+          # подставим переменные вручную (sed), т.к. heredoc выше зафиксирован без подстановок
+          sed -i "s|\${VPS_HOST}|$VPS_HOST|g; s|\${VPS_USER}|$VPS_USER|g; s|\${VPS_PORT}|$VPS_PORT|g" "$HOME/.ssh/config"
+          sed -i "s|\${HOME_HOST}|$HOME_HOST|g; s|\${HOME_USER}|$HOME_USER|g; s|\${HOME_PORT}|$HOME_PORT|g" "$HOME/.ssh/config"
+          chmod 600 "$HOME/.ssh/config"
 
-- name: Upload compose and backend sources to HOME
-  shell: bash
-  run: |
-    set -euo pipefail
-    ssh -F "$HOME/.ssh/config" home "mkdir -p '$HOME_BACKEND_PATH/backend'"
-    rsync -avz --delete -e "ssh -F $HOME/.ssh/config" \
-      docker-compose.backend.yml \
-      home:"$HOME_BACKEND_PATH/docker-compose.backend.yml"
-    
-    rsync -avz --delete -e "ssh -F $HOME/.ssh/config" \
-      backend/ \
-      home:"$HOME_BACKEND_PATH/backend/"
+      - name: Smoke SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" vps  "echo VPS OK: \$(hostname)"
+          ssh -F "$HOME/.ssh/config" home "echo HOME OK: \$(hostname)"
 
-- name: Build & Restart docker-compose on HOME
-  shell: bash
-  run: |
-    set -euo pipefail
-    ssh -F "$HOME/.ssh/config" home "
-      set -e
-      cd '$HOME_BACKEND_PATH'
-      docker compose -f docker-compose.backend.yml build --pull
-      docker compose -f docker-compose.backend.yml up -d
-      docker image prune -f
-      docker compose -f docker-compose.backend.yml ps
-    "
+      - name: Upload compose and backend sources to HOME
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" home "mkdir -p '$HOME_BACKEND_PATH/backend'"
+          rsync -avz --delete -e "ssh -F $HOME/.ssh/config" \
+            docker-compose.backend.yml \
+            home:"$HOME_BACKEND_PATH/docker-compose.backend.yml"
+
+          rsync -avz --delete -e "ssh -F $HOME/.ssh/config" \
+            backend/ \
+            home:"$HOME_BACKEND_PATH/backend/"
+
+      - name: Build & Restart docker-compose on HOME
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" home "
+            set -e
+            cd '$HOME_BACKEND_PATH'
+            docker compose -f docker-compose.backend.yml build --pull
+            docker compose -f docker-compose.backend.yml up -d
+            docker image prune -f
+            docker compose -f docker-compose.backend.yml ps
+          "
