@@ -50,15 +50,15 @@ jobs:
           HOME_SSH_PORT="${HOME_SSH_PORT:-22}"
 
           cat > "$HOME/.ssh/config" <<CFG
-  Host vps
+Host vps
   HostName ${VPS_HOST}
   User ${VPS_USER}
   Port ${VPS_SSH_PORT}
   IdentityFile ~/.ssh/vps_key
   IdentitiesOnly yes
   UserKnownHostsFile ~/.ssh/known_hosts
-  
-  Host home
+
+Host home
   HostName ${HOME_HOST}
   User ${HOME_USER}
   Port ${HOME_SSH_PORT}
@@ -66,38 +66,38 @@ jobs:
   IdentitiesOnly yes
   UserKnownHostsFile ~/.ssh/known_hosts
   ProxyJump vps
-  CFG
-  
-  ssh-keyscan -H -p "$VPS_SSH_PORT" "$VPS_HOST" >> "$HOME/.ssh/known_hosts"
-  ssh -F "$HOME/.ssh/config" vps "ssh-keyscan -H -p '$HOME_SSH_PORT' '$HOME_HOST'" >> "$HOME/.ssh/known_hosts"
-  chmod 600 "$HOME/.ssh/known_hosts"
+CFG
 
-- name: Sanity check SSH
-  run: |
-    ssh -F "$HOME/.ssh/config" vps  "echo '✅ VPS OK:'  \$(hostname)"
-    ssh -F "$HOME/.ssh/config" home "echo '✅ HOME OK:' \$(hostname)"
+          ssh-keyscan -H -p "$VPS_SSH_PORT" "$VPS_HOST" >> "$HOME/.ssh/known_hosts"
+          ssh -F "$HOME/.ssh/config" vps "ssh-keyscan -H -p '$HOME_SSH_PORT' '$HOME_HOST'" >> "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
 
-- name: Ensure remote dirs
-  run: ssh -F "$HOME/.ssh/config" home "mkdir -p '${HOME_APP_DIR}/backend'"
+      - name: Sanity check SSH
+        run: |
+          ssh -F "$HOME/.ssh/config" vps  "echo '✅ VPS OK:'  \$(hostname)"
+          ssh -F "$HOME/.ssh/config" home "echo '✅ HOME OK:' \$(hostname)"
 
-- name: Rsync docker-compose to HOME
-  run: rsync -avz --delete -e "ssh -F $HOME/.ssh/config" docker-compose.backend.yml home:"${HOME_APP_DIR}/"
+      - name: Ensure remote dirs
+        run: ssh -F "$HOME/.ssh/config" home "mkdir -p '${HOME_APP_DIR}/backend'"
 
-- name: Rsync backend sources to HOME
-  run: rsync -avz --delete -e "ssh -F $HOME/.ssh/config" backend/ home:"${HOME_APP_DIR}/backend/"
+      - name: Rsync docker-compose to HOME
+        run: rsync -avz --delete -e "ssh -F $HOME/.ssh/config" docker-compose.backend.yml home:"${HOME_APP_DIR}/"
 
-- name: Deploy on HOME (docker compose build & up)
-  env:
-    BUILD_VERSION: ${{ env.BUILD_VERSION }}
-  run: |
-    ssh -F "$HOME/.ssh/config" home "
-      set -euo pipefail
-      cd '${HOME_APP_DIR}'
-      export BUILD_VERSION='${BUILD_VERSION}'
-      echo '🔖 BUILD_VERSION='$BUILD_VERSION
-      docker compose -f '${HOME_COMPOSE_FILE}' build --pull backend
-      docker compose -f '${HOME_COMPOSE_FILE}' up -d --build --remove-orphans
-      docker image prune -af || true
-      docker compose -f '${HOME_COMPOSE_FILE}' ps
-      docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
-    "
+      - name: Rsync backend sources to HOME
+        run: rsync -avz --delete -e "ssh -F $HOME/.ssh/config" backend/ home:"${HOME_APP_DIR}/backend/"
+
+      - name: Deploy on HOME (docker compose build & up)
+        env:
+          BUILD_VERSION: ${{ env.BUILD_VERSION }}
+        run: |
+          ssh -F "$HOME/.ssh/config" home "
+            set -euo pipefail
+            cd '${HOME_APP_DIR}'
+            export BUILD_VERSION='${BUILD_VERSION}'
+            echo '🔖 BUILD_VERSION='$BUILD_VERSION
+            docker compose -f '${HOME_COMPOSE_FILE}' build --pull backend
+            docker compose -f '${HOME_COMPOSE_FILE}' up -d --build --remove-orphans
+            docker image prune -af || true
+            docker compose -f '${HOME_COMPOSE_FILE}' ps
+            docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+          "
