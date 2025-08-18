@@ -32,86 +32,84 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          # VPS key
           echo "$VPS_SSH_KEY"  > ~/.ssh/vps_key
-          chmod 600 ~/.ssh/vps_key
-          # HOME key
           echo "$HOME_SSH_KEY" > ~/.ssh/home_key
-          chmod 600 ~/.ssh/home_key
+          chmod 600 ~/.ssh/vps_key ~/.ssh/home_key
 
-      - name: Verify SSH connectivity (VPS)
-        run: |
-          ssh -i ~/.ssh/vps_key \
-            -o IdentitiesOnly=yes \
-            -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
-            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-            "echo VPS OK: \$(hostname)"
-
-      - name: Verify SSH connectivity (HOME via ProxyJump)
+      - name: Write SSH config (aliases: vps, home)
         env:
-          HOME_SSH_PORT: ${{ secrets.HOME_SSH_PORT }}
+          VPS_HOST:        ${{ secrets.VPS_HOST }}
+          VPS_USER:        ${{ secrets.VPS_USER }}
+          HOME_HOST:       ${{ secrets.HOME_HOST }}
+          HOME_USER:       ${{ secrets.HOME_USER }}
+          HOME_SSH_PORT:   ${{ secrets.HOME_SSH_PORT }}
         run: |
           PORT=${HOME_SSH_PORT:-22}
-          ssh -i ~/.ssh/home_key \
-            -J "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-            -o IdentitiesOnly=yes \
-            -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
-            -p "$PORT" \
-            "${{ secrets.HOME_USER }}@${{ secrets.HOME_HOST }}" \
-            "echo HOME OK: \$(hostname)"
+          cat > ~/.ssh/config <<EOF
+          Host vps
+            HostName ${VPS_HOST}
+            User ${VPS_USER}
+            IdentityFile ~/.ssh/vps_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+            GlobalKnownHostsFile /dev/null
+            LogLevel ERROR
+
+          Host home
+            HostName ${HOME_HOST}
+            User ${HOME_USER}
+            Port ${PORT}
+            IdentityFile ~/.ssh/home_key
+            IdentitiesOnly yes
+            ProxyJump vps
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+            GlobalKnownHostsFile /dev/null
+            ServerAliveInterval 30
+            ServerAliveCountMax 6
+            LogLevel ERROR
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Verify SSH connectivity (VPS)
+        run: ssh vps "echo VPS OK: \$(hostname)"
+
+      - name: Verify SSH connectivity (HOME via ProxyJump)
+        run: ssh home "echo HOME OK: \$(hostname)"
 
       - name: Ensure target directory on HOME
         env:
-          HOME_SSH_PORT:     ${{ secrets.HOME_SSH_PORT }}
           HOME_BACKEND_PATH: ${{ secrets.HOME_BACKEND_PATH }}
-        run: |
-          PORT=${HOME_SSH_PORT:-22}
-          ssh -i ~/.ssh/home_key \
-            -J "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-            -o IdentitiesOnly=yes \
-            -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
-            -p "$PORT" \
-            "${{ secrets.HOME_USER }}@${{ secrets.HOME_HOST }}" \
-            "mkdir -p '${HOME_BACKEND_PATH}'"
+        run: ssh home "mkdir -p '${HOME_BACKEND_PATH}'"
 
-      - name: Rsync docker-compose file to HOME
+      - name: Rsync docker-compose to HOME
         env:
-          HOME_SSH_PORT:     ${{ secrets.HOME_SSH_PORT }}
           HOME_BACKEND_PATH: ${{ secrets.HOME_BACKEND_PATH }}
         run: |
-          PORT=${HOME_SSH_PORT:-22}
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/home_key -J ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} -o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $PORT" \
+            -e "ssh" \
             docker-compose.backend.yml \
-            "${{ secrets.HOME_USER }}@${{ secrets.HOME_HOST }}:${HOME_BACKEND_PATH}/"
+            home:"${HOME_BACKEND_PATH}/"
 
-      - name: Rsync backend/ sources to HOME
+      - name: Rsync backend sources to HOME
         env:
-          HOME_SSH_PORT:     ${{ secrets.HOME_SSH_PORT }}
           HOME_BACKEND_PATH: ${{ secrets.HOME_BACKEND_PATH }}
         run: |
-          PORT=${HOME_SSH_PORT:-22}
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/home_key -J ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} -o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $PORT" \
+            -e "ssh" \
             backend/ \
-            "${{ secrets.HOME_USER }}@${{ secrets.HOME_HOST }}:${HOME_BACKEND_PATH}/backend/"
+            home:"${HOME_BACKEND_PATH}/backend/"
 
       - name: Docker Compose up on HOME
         env:
-          HOME_SSH_PORT:     ${{ secrets.HOME_SSH_PORT }}
           HOME_BACKEND_PATH: ${{ secrets.HOME_BACKEND_PATH }}
         run: |
-          PORT=${HOME_SSH_PORT:-22}
-          ssh -i ~/.ssh/home_key \
-            -J "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-            -o IdentitiesOnly=yes \
-            -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
-            -p "$PORT" \
-            "${{ secrets.HOME_USER }}@${{ secrets.HOME_HOST }}" "
-              set -euxo pipefail
-              cd '${HOME_BACKEND_PATH}'
-              docker compose -f docker-compose.backend.yml pull || true
-              docker compose -f docker-compose.backend.yml build --pull
-              docker compose -f docker-compose.backend.yml up -d
-              docker compose -f docker-compose.backend.yml ps
-            "
+          ssh home bash -lc "
+            set -euo pipefail
+            cd '${HOME_BACKEND_PATH}'
+            docker compose -f docker-compose.backend.yml pull || true
+            docker compose -f docker-compose.backend.yml build --pull
+            docker compose -f docker-compose.backend.yml up -d
+            docker compose -f docker-compose.backend.yml ps
+          "
