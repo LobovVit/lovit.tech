@@ -1,83 +1,47 @@
-name: Deploy Backend (Home via VPS Bastion)
+name: Deploy Backend (Docker via VPS ProxyJump)
 
 on:
   push:
-    branches: [ "develop" ]
+    branches:
+      - develop
     paths:
-      - "backend/**"
-      - "docker-compose.backend.yml"
-      - ".github/workflows/deploy-backend-docker.yml"
+      - 'backend/**'
+      - 'docker-compose.backend.yml'
+      - '.github/workflows/deploy-backend-docker.yml'
 
 jobs:
-  build-and-push:
+  deploy-backend:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Lowercase image name & tag
-        id: meta
+      - name: Install rsync and ssh-keyscan
         run: |
-          REPO="${{ github.repository }}"
-          echo "image=ghcr.io/${REPO,,}/backend" >> $GITHUB_OUTPUT
-          echo "tag=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build & push image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend
-          file: ./backend/Dockerfile
-          push: true
-          tags: |
-            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.tag }}
-            ${{ steps.meta.outputs.image }}:latest
-          build-args: |
-            GIT_SHA=${{ github.sha }}
-
-  deploy-home-via-vps:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    steps:
-      - name: Checkout (for compose file)
-        uses: actions/checkout@v4
-
-      - name: Install rsync and ssh-client
-        run: |
-          sudo apt-get update
+          sudo apt-get update -y
           sudo apt-get install -y rsync openssh-client
 
       - name: Prepare SSH keys and config (ProxyJump)
+        shell: bash
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
-          # Ключ для VPS
-          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/vps_key
-          chmod 600 ~/.ssh/vps_key
-
-          # Ключ для домашнего
+          # Сохраняем приватные ключи
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}"  > ~/.ssh/vps_key
           printf '%s\n' "${{ secrets.HOME_SSH_KEY }}" > ~/.ssh/home_key
-          chmod 600 ~/.ssh/home_key
+          chmod 600 ~/.ssh/vps_key ~/.ssh/home_key
 
-          # known_hosts (чтобы не отключать проверку)
+          # known_hosts
           touch ~/.ssh/known_hosts
-          ssh-keyscan -p 22 -T 10 ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
-          ssh -i ~/.ssh/vps_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/known_hosts \
-            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            "ssh-keyscan -p 22 -T 10 ${{ secrets.HOME_HOST }}" >> ~/.ssh/known_hosts || true
+          ssh-keyscan -p 22 -T 10 ${{ secrets.VPS_HOST }}  >> ~/.ssh/known_hosts 2>/dev/null || true
+          # Скан домашнего хоста через VPS, чтобы добавить его ключ
+          ssh -i ~/.ssh/vps_key -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "ssh-keyscan -p 22 -T 10 ${{ secrets.HOME_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
 
-          # SSH config с подстановкой переменных
+          # SSH config (без кавычек у EOF — важна подстановка secrets)
           cat > ~/.ssh/config <<EOF
           Host vps
             HostName ${{ secrets.VPS_HOST }}
@@ -96,25 +60,45 @@ jobs:
           EOF
 
           chmod 600 ~/.ssh/config
+          echo "SSH config created:"
+          ls -la ~/.ssh
 
-      - name: Create app dir on HOME
+      - name: Verify SSH connectivity (VPS and Home)
         run: |
-          ssh -F ~/.ssh/config home "mkdir -p '${{ secrets.HOME_APP_DIR }}'"
+          set -e
+          ssh -F ~/.ssh/config -o StrictHostKeyChecking=yes vps "echo 'VPS OK: $(hostname)'" 
+          ssh -F ~/.ssh/config -o StrictHostKeyChecking=yes home "echo 'HOME OK: $(hostname)'" 
 
-      - name: Upload compose to HOME
-        run: |
-          rsync -avz -e "ssh -F ~/.ssh/config" docker-compose.backend.yml \
-            home:${{ secrets.HOME_APP_DIR }}/docker-compose.backend.yml
-
-      - name: Pull & restart on HOME
+      - name: Prepare remote target folder on HOME
         env:
-          APP_DIR: ${{ secrets.HOME_APP_DIR }}
-          GHCR_IMAGE: ghcr.io/${{ github.repository }}/backend
+          HOME_BACKEND_PATH: ${{ secrets.HOME_BACKEND_PATH }}
         run: |
-          ssh -F ~/.ssh/config home bash -lc "
-            cd '${APP_DIR}' &&
-            docker login ghcr.io -u '${{ github.actor }}' -p '${{ secrets.GITHUB_TOKEN }}' &&
-            docker compose -f docker-compose.backend.yml pull &&
-            docker compose -f docker-compose.backend.yml up -d &&
-            docker image prune -f
+          ssh -F ~/.ssh/config home "mkdir -p '${HOME_BACKEND_PATH}'"
+
+      - name: Rsync backend files to HOME (via ProxyJump)
+        env:
+          HOME_BACKEND_PATH: ${{ secrets.HOME_BACKEND_PATH }}
+        run: |
+          # Синкаем docker-compose для бекенда и сам backend-код
+          rsync -avz --delete -e "ssh -F ~/.ssh/config" \
+            docker-compose.backend.yml \
+            home:"${HOME_BACKEND_PATH}/"
+
+          rsync -avz --delete -e "ssh -F ~/.ssh/config" \
+            backend/ \
+            home:"${HOME_BACKEND_PATH}/backend/"
+
+      - name: Deploy on HOME with Docker Compose
+        env:
+          HOME_BACKEND_PATH: ${{ secrets.HOME_BACKEND_PATH }}
+        run: |
+          # Если нужен docker login к реестру — добавьте команду логина здесь.
+          ssh -F ~/.ssh/config home "
+            set -e
+            cd '${HOME_BACKEND_PATH}'
+            # Подтягиваем образы/пересобираем и поднимаем
+            docker compose -f docker-compose.backend.yml pull || true
+            docker compose -f docker-compose.backend.yml build --pull
+            docker compose -f docker-compose.backend.yml up -d
+            docker compose -f docker-compose.backend.yml ps
           "
