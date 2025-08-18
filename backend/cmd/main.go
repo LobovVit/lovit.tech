@@ -8,6 +8,7 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
+
 	mux.HandleFunc("/api/ping", handlers.PingHandler)
 
 	log.Println("🚀 Backend started on :8080")

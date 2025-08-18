@@ -6,7 +6,7 @@ import (
 )
 
 func PingHandler(w http.ResponseWriter, r *http.Request) {
-	data := "Hi Vitaliy"
+	data := "Hi Vitaliy!!! "
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
