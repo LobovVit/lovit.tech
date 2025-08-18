@@ -13,17 +13,12 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # VPS (публичный сервер)
       VPS_HOST: ${{ secrets.VPS_HOST }}
       VPS_USER: ${{ secrets.VPS_USER }}
-      VPS_SSH_PORT: ${{ secrets.VPS_SSH_PORT }} # можно оставить пустым; в командах есть дефолт 22
-
-      # Домашний сервер (доступен только с VPS)
+      VPS_SSH_PORT: ${{ secrets.VPS_SSH_PORT }}
       HOME_HOST: ${{ secrets.HOME_HOST }}
-      HOME_USER: ${{ secrets.HOME_USER }}       # у тебя: lobov
-      HOME_SSH_PORT: ${{ secrets.HOME_SSH_PORT }} # можно оставить пустым; в командах есть дефолт 22
-
-      # Куда складывать на домашнем сервере
+      HOME_USER: ${{ secrets.HOME_USER }}
+      HOME_SSH_PORT: ${{ secrets.HOME_SSH_PORT }}
       HOME_APP_DIR: "/opt/lovit/backend"
       HOME_COMPOSE_FILE: "docker-compose.backend.yml"
 
@@ -44,8 +39,12 @@ jobs:
           echo "${{ secrets.HOME_SSH_KEY }}" > "$HOME/.ssh/home_key"
           chmod 600 "$HOME/.ssh/vps_key" "$HOME/.ssh/home_key"
 
-          # Создаём SSH-конфиг с ProxyJump через VPS
-          cat > "$HOME/.ssh/config" <<'CFG'
+          # Дефолты портов, если секреты пусты
+          VPS_SSH_PORT="${VPS_SSH_PORT:-22}"
+          HOME_SSH_PORT="${HOME_SSH_PORT:-22}"
+
+          # Пишем SSH config (ВАЖНО: без одинарных кавычек, чтобы подставились переменные)
+          cat > "$HOME/.ssh/config" <<CFG
           Host vps
             HostName ${VPS_HOST}
             User ${VPS_USER}
@@ -66,15 +65,10 @@ jobs:
             ProxyJump vps
           CFG
 
-          # Подставим дефолтные порты, если секреты пустые
-          VPS_SSH_PORT="${VPS_SSH_PORT:-22}"
-          HOME_SSH_PORT="${HOME_SSH_PORT:-22}"
-          export VPS_SSH_PORT HOME_SSH_PORT
-
           # known_hosts для VPS
           ssh-keyscan -H -p "$VPS_SSH_PORT" "$VPS_HOST" >> "$HOME/.ssh/known_hosts"
 
-          # known_hosts для HOME (сканим через VPS)
+          # known_hosts для HOME (через VPS)
           ssh -F "$HOME/.ssh/config" vps "ssh-keyscan -H -p '$HOME_SSH_PORT' '$HOME_HOST'" >> "$HOME/.ssh/known_hosts"
 
           chmod 600 "$HOME/.ssh/known_hosts"
