@@ -42,7 +42,6 @@ jobs:
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
 
-          # приватные ключи (сохраняем с переносами строк!)
           echo "$VPS_SSH_KEY"  > "$HOME/.ssh/vps_key"
           echo "$HOME_SSH_KEY" > "$HOME/.ssh/home_key"
           chmod 600 "$HOME/.ssh/vps_key" "$HOME/.ssh/home_key"
@@ -50,7 +49,6 @@ jobs:
           VPS_SSH_PORT="${VPS_SSH_PORT:-22}"
           HOME_SSH_PORT="${HOME_SSH_PORT:-22}"
 
-          # ssh config
           cat > "$HOME/.ssh/config" <<CFG
   Host vps
   HostName ${VPS_HOST}
@@ -70,7 +68,6 @@ jobs:
   ProxyJump vps
   CFG
   
-  # known_hosts
   ssh-keyscan -H -p "$VPS_SSH_PORT" "$VPS_HOST" >> "$HOME/.ssh/known_hosts"
   ssh -F "$HOME/.ssh/config" vps "ssh-keyscan -H -p '$HOME_SSH_PORT' '$HOME_HOST'" >> "$HOME/.ssh/known_hosts"
   chmod 600 "$HOME/.ssh/known_hosts"
