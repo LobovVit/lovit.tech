@@ -14,7 +14,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Куда на домашнем сервере складывать код/compose
   HOME_APP_DIR: /opt/lovit/backend
   HOME_COMPOSE_FILE: docker-compose.backend.yml
 
@@ -37,27 +36,24 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
           HOME_HOST: ${{ secrets.HOME_HOST }}
           HOME_USER: ${{ secrets.HOME_USER }}
-          HOME_SSH_PORT: ${{ secrets.HOME_SSH_PORT }}   # может быть пустым -> возьмем 22
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}       # приватный ключ для VPS (ed25519)
-          HOME_SSH_KEY: ${{ secrets.HOME_SSH_KEY }}     # приватный ключ для HOME (ed25519)
+          HOME_SSH_PORT: ${{ secrets.HOME_SSH_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOME_SSH_KEY: ${{ secrets.HOME_SSH_KEY }}
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
-          # ключи
           printf '%s\n' "$VPS_SSH_KEY"  > ~/.ssh/vps_key
           printf '%s\n' "$HOME_SSH_KEY" > ~/.ssh/home_key
           chmod 600 ~/.ssh/vps_key ~/.ssh/home_key
 
-          # defaults
           HOME_PORT="${HOME_SSH_PORT:-22}"
 
-          # known_hosts для VPS
+          # VPS host key
           ssh-keyscan -t ed25519 "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
           chmod 644 ~/.ssh/known_hosts
 
-          # ssh-config с ProxyJump через VPS
           cat > ~/.ssh/config <<EOF
           Host vps
             HostName ${VPS_HOST}
@@ -77,21 +73,30 @@ jobs:
             StrictHostKeyChecking yes
             UserKnownHostsFile ~/.ssh/known_hosts
           EOF
-
           chmod 600 ~/.ssh/config
 
-      - name: Add HOME host key to known_hosts via VPS
+      - name: Add HOME host key to known_hosts via VPS (with port entry)
         env:
           HOME_HOST: ${{ secrets.HOME_HOST }}
           HOME_SSH_PORT: ${{ secrets.HOME_SSH_PORT }}
         run: |
           set -euo pipefail
           HOME_PORT="${HOME_SSH_PORT:-22}"
-          # Запрашиваем ключ домашнего хоста с VPS (внутри сети), добавляем в known_hosts раннера
-          ssh -F ~/.ssh/config vps "ssh-keyscan -t ed25519 -p '${HOME_PORT}' '${HOME_HOST}' 2>/dev/null" >> ~/.ssh/known_hosts
+
+          # Сканим ключ дома С VPS, чтобы реально дотянуться внутри сети
+          ssh -F ~/.ssh/config vps "ssh-keyscan -t ed25519 -p '${HOME_PORT}' '${HOME_HOST}' 2>/dev/null" > /tmp/home_keyscan || true
+
+          # 1) обычная запись host keytype key
+          cat /tmp/home_keyscan >> ~/.ssh/known_hosts || true
+
+          # 2) запись с портом: [host]:port keytype key (важно для нестандартного порта)
+          awk -v h="${HOME_HOST}" -v p="${HOME_PORT}" '
+            $1==h { $1="[" h "]:" p; print; }
+          ' /tmp/home_keyscan >> ~/.ssh/known_hosts || true
+
           chmod 644 ~/.ssh/known_hosts
-          echo "Known_hosts entry for HOME:"
-          grep "${HOME_HOST}" ~/.ssh/known_hosts || true
+          echo "Known_hosts entries for HOME:"
+          grep -E "(${HOME_HOST}|\\[${HOME_HOST}\\]:${HOME_PORT})" ~/.ssh/known_hosts || true
 
       - name: Sanity-check SSH connectivity
         run: |
@@ -111,12 +116,10 @@ jobs:
           HOME_APP_DIR: ${{ env.HOME_APP_DIR }}
         run: |
           set -euo pipefail
-          # docker-compose file (в корне репо)
           rsync -avz --delete -e "ssh -F ~/.ssh/config" \
             docker-compose.backend.yml \
             home:"${HOME_APP_DIR}/"
 
-          # код backend/
           rsync -avz --delete -e "ssh -F ~/.ssh/config" \
             backend/ \
             home:"${HOME_APP_DIR}/backend/"
