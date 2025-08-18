@@ -91,6 +91,16 @@ jobs:
               }' ~/.ssh/config > ~/.ssh/config.tmp && mv ~/.ssh/config.tmp ~/.ssh/config
           chmod 600 ~/.ssh/config
 
+      - name: Add HOME host key to runner's known_hosts via VPS
+        run: |
+          # Считываем публичный ключ домашнего хоста через VPS и добавляем локально
+          ssh -F ~/.ssh/config vps "ssh-keyscan -p '${HOME_PORT}' '${{ secrets.HOME_HOST }}' 2>/dev/null" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+          # Для отладки — покажем, что в known_hosts появилась строка
+          echo "Known hosts entry for HOME:"
+          grep "${{ secrets.HOME_HOST }}" ~/.ssh/known_hosts || true
+
       - name: Sanity check SSH to VPS and HOME (via ProxyJump)
         run: |
           ssh -F ~/.ssh/config vps  "echo '✅ VPS OK:'  \$(hostname)"
