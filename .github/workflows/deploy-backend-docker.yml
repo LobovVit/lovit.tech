@@ -23,9 +23,7 @@ jobs:
       HOME_SSH_KEY: ${{ secrets.HOME_SSH_KEY }}
       HOME_SSH_PORT: ${{ secrets.HOME_SSH_PORT }}
 
-      # где на домашнем сервере лежит проект
       HOME_APP_DIR: "/opt/lovit/backend"
-      # как называется compose-файл на домашнем сервере
       HOME_COMPOSE_FILE: "docker-compose.backend.yml"
 
     steps:
@@ -33,114 +31,76 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Make build version (changes every run)
-        shell: bash
         run: |
-          set -euo pipefail
           short_sha="${GITHUB_SHA::7}"
           ts="$(date +%Y%m%d%H%M%S)"
           echo "BUILD_VERSION=${short_sha}-${ts}" >> "$GITHUB_ENV"
           echo "Build version: ${short_sha}-${ts}"
 
       - name: Prepare SSH (keys, config, known_hosts)
-        shell: bash
         run: |
-          set -euo pipefail
-
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
 
-          # приватные ключи
-          printf "%s" "$VPS_SSH_KEY"  > "$HOME/.ssh/vps_key"
-          printf "%s" "$HOME_SSH_KEY" > "$HOME/.ssh/home_key"
+          # приватные ключи (сохраняем с переносами строк!)
+          echo "$VPS_SSH_KEY"  > "$HOME/.ssh/vps_key"
+          echo "$HOME_SSH_KEY" > "$HOME/.ssh/home_key"
           chmod 600 "$HOME/.ssh/vps_key" "$HOME/.ssh/home_key"
 
-          # дефолтные порты
           VPS_SSH_PORT="${VPS_SSH_PORT:-22}"
           HOME_SSH_PORT="${HOME_SSH_PORT:-22}"
 
-          # ssh config (важно: без одинарных кавычек)
+          # ssh config
           cat > "$HOME/.ssh/config" <<CFG
-          Host vps
-            HostName ${VPS_HOST}
-            User ${VPS_USER}
-            Port ${VPS_SSH_PORT}
-            IdentityFile ~/.ssh/vps_key
-            IdentitiesOnly yes
-            StrictHostKeyChecking yes
-            UserKnownHostsFile ~/.ssh/known_hosts
+  Host vps
+  HostName ${VPS_HOST}
+  User ${VPS_USER}
+  Port ${VPS_SSH_PORT}
+  IdentityFile ~/.ssh/vps_key
+  IdentitiesOnly yes
+  UserKnownHostsFile ~/.ssh/known_hosts
+  
+  Host home
+  HostName ${HOME_HOST}
+  User ${HOME_USER}
+  Port ${HOME_SSH_PORT}
+  IdentityFile ~/.ssh/home_key
+  IdentitiesOnly yes
+  UserKnownHostsFile ~/.ssh/known_hosts
+  ProxyJump vps
+  CFG
+  
+  # known_hosts
+  ssh-keyscan -H -p "$VPS_SSH_PORT" "$VPS_HOST" >> "$HOME/.ssh/known_hosts"
+  ssh -F "$HOME/.ssh/config" vps "ssh-keyscan -H -p '$HOME_SSH_PORT' '$HOME_HOST'" >> "$HOME/.ssh/known_hosts"
+  chmod 600 "$HOME/.ssh/known_hosts"
 
-          Host home
-            HostName ${HOME_HOST}
-            User ${HOME_USER}
-            Port ${HOME_SSH_PORT}
-            IdentityFile ~/.ssh/home_key
-            IdentitiesOnly yes
-            StrictHostKeyChecking yes
-            UserKnownHostsFile ~/.ssh/known_hosts
-            ProxyJump vps
-          CFG
+- name: Sanity check SSH
+  run: |
+    ssh -F "$HOME/.ssh/config" vps  "echo '✅ VPS OK:'  \$(hostname)"
+    ssh -F "$HOME/.ssh/config" home "echo '✅ HOME OK:' \$(hostname)"
 
-          # known_hosts для VPS
-          ssh-keyscan -H -p "$VPS_SSH_PORT" "$VPS_HOST" >> "$HOME/.ssh/known_hosts"
-          # known_hosts для HOME (сканируем с VPS)
-          ssh -F "$HOME/.ssh/config" vps "ssh-keyscan -H -p '$HOME_SSH_PORT' '$HOME_HOST'" >> "$HOME/.ssh/known_hosts"
-          chmod 600 "$HOME/.ssh/known_hosts"
+- name: Ensure remote dirs
+  run: ssh -F "$HOME/.ssh/config" home "mkdir -p '${HOME_APP_DIR}/backend'"
 
-      - name: Sanity check SSH
-        shell: bash
-        run: |
-          set -euo pipefail
-          ssh -F "$HOME/.ssh/config" vps  "echo '✅ VPS OK:'  \$(hostname)"
-          ssh -F "$HOME/.ssh/config" home "echo '✅ HOME OK:' \$(hostname)"
+- name: Rsync docker-compose to HOME
+  run: rsync -avz --delete -e "ssh -F $HOME/.ssh/config" docker-compose.backend.yml home:"${HOME_APP_DIR}/"
 
-      - name: Ensure remote dirs
-        shell: bash
-        run: |
-          set -euo pipefail
-          ssh -F "$HOME/.ssh/config" home "mkdir -p '${HOME_APP_DIR}/backend'"
+- name: Rsync backend sources to HOME
+  run: rsync -avz --delete -e "ssh -F $HOME/.ssh/config" backend/ home:"${HOME_APP_DIR}/backend/"
 
-      - name: Rsync docker-compose to HOME
-        shell: bash
-        run: |
-          set -euo pipefail
-          rsync -avz --delete -e "ssh -F $HOME/.ssh/config" \
-            docker-compose.backend.yml \
-            home:"${HOME_APP_DIR}/"
-
-      - name: Rsync backend sources to HOME
-        shell: bash
-        run: |
-          set -euo pipefail
-          rsync -avz --delete -e "ssh -F $HOME/.ssh/config" \
-            backend/ \
-            home:"${HOME_APP_DIR}/backend/"
-
-      - name: Deploy on HOME (docker compose build & up)
-        shell: bash
-        env:
-          BUILD_VERSION: ${{ env.BUILD_VERSION }}
-        run: |
-          set -euo pipefail
-          ssh -F "$HOME/.ssh/config" home "
-            set -euo pipefail
-            cd '${HOME_APP_DIR}'
-
-            export BUILD_VERSION='${BUILD_VERSION}'
-            echo '🔖 BUILD_VERSION='$BUILD_VERSION
-
-            echo '🔧 docker compose build (no-cache for source changes)...'
-            docker compose -f '${HOME_COMPOSE_FILE}' build \
-              --pull backend
-
-            echo '🚀 docker compose up -d (with --build)...'
-            docker compose -f '${HOME_COMPOSE_FILE}' up -d --build --remove-orphans
-
-            echo '🧹 prune old images (optional)'
-            docker image prune -af || true
-
-            echo '🔎 docker compose ps:'
-            docker compose -f '${HOME_COMPOSE_FILE}' ps
-
-            echo '🔎 docker ps:'
-            docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
-          "
+- name: Deploy on HOME (docker compose build & up)
+  env:
+    BUILD_VERSION: ${{ env.BUILD_VERSION }}
+  run: |
+    ssh -F "$HOME/.ssh/config" home "
+      set -euo pipefail
+      cd '${HOME_APP_DIR}'
+      export BUILD_VERSION='${BUILD_VERSION}'
+      echo '🔖 BUILD_VERSION='$BUILD_VERSION
+      docker compose -f '${HOME_COMPOSE_FILE}' build --pull backend
+      docker compose -f '${HOME_COMPOSE_FILE}' up -d --build --remove-orphans
+      docker image prune -af || true
+      docker compose -f '${HOME_COMPOSE_FILE}' ps
+      docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+    "
