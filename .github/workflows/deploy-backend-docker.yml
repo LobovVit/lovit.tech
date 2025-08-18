@@ -1,83 +1,114 @@
-name: Deploy Backend (Docker via VPS ProxyJump)
+name: Deploy Backend (Docker via VPS Jump)
 
 on:
   push:
-    branches: [develop]
+    branches: [ develop ]
     paths:
       - 'backend/**'
       - 'docker-compose.backend.yml'
       - '.github/workflows/deploy-backend-docker.yml'
 
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: true
+
 jobs:
-  deploy-backend:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install rsync & OpenSSH client
+      - name: Install rsync & ssh client
         run: |
           sudo apt-get update -y
           sudo apt-get install -y rsync openssh-client
 
-      - name: Write SSH keys
+      - name: Prepare SSH keys
+        env:
+          VPS_SSH_KEY:  ${{ secrets.VPS_SSH_KEY }}
+          HOME_SSH_KEY: ${{ secrets.HOME_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}"  > ~/.ssh/vps_key
-          printf '%s\n' "${{ secrets.HOME_SSH_KEY }}" > ~/.ssh/home_key
-          chmod 600 ~/.ssh/vps_key ~/.ssh/home_key
+          # VPS key
+          echo "$VPS_SSH_KEY"  > ~/.ssh/vps_key
+          chmod 600 ~/.ssh/vps_key
+          # HOME key
+          echo "$HOME_SSH_KEY" > ~/.ssh/home_key
+          chmod 600 ~/.ssh/home_key
 
-      - name: Add known_hosts for VPS and HOME
+      - name: Verify SSH connectivity (VPS)
         run: |
-          touch ~/.ssh/known_hosts
-          # VPS fingerprint
-          ssh-keyscan -p 22 -T 10 "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
-          # HOME fingerprint через VPS (ProxyJump)
-          ssh -i ~/.ssh/vps_key -o StrictHostKeyChecking=no "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-            "ssh-keyscan -p 22 -T 10 '${{ secrets.HOME_HOST }}'" >> ~/.ssh/known_hosts 2>/dev/null || true
-          chmod 644 ~/.ssh/known_hosts
+          ssh -i ~/.ssh/vps_key \
+            -o IdentitiesOnly=yes \
+            -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "echo VPS OK: \$(hostname)"
 
-      - name: Verify SSH connectivity (VPS and HOME via ProxyJump)
-        run: |
-          ssh -i ~/.ssh/vps_key -o StrictHostKeyChecking=yes "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" "echo VPS OK: \$(hostname)"
-          ssh -i ~/.ssh/home_key -J "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" -o StrictHostKeyChecking=yes \
-            "${{ secrets.HOME_USER }}@${{ secrets.HOME_HOST }}" "echo HOME OK: \$(hostname)"
-
-      - name: Ensure remote target dir on HOME
+      - name: Verify SSH connectivity (HOME via ProxyJump)
         env:
+          HOME_SSH_PORT: ${{ secrets.HOME_SSH_PORT }}
+        run: |
+          PORT=${HOME_SSH_PORT:-22}
+          ssh -i ~/.ssh/home_key \
+            -J "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            -o IdentitiesOnly=yes \
+            -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
+            -p "$PORT" \
+            "${{ secrets.HOME_USER }}@${{ secrets.HOME_HOST }}" \
+            "echo HOME OK: \$(hostname)"
+
+      - name: Ensure target directory on HOME
+        env:
+          HOME_SSH_PORT:     ${{ secrets.HOME_SSH_PORT }}
           HOME_BACKEND_PATH: ${{ secrets.HOME_BACKEND_PATH }}
         run: |
-          ssh -i ~/.ssh/home_key -J "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+          PORT=${HOME_SSH_PORT:-22}
+          ssh -i ~/.ssh/home_key \
+            -J "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            -o IdentitiesOnly=yes \
+            -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
+            -p "$PORT" \
             "${{ secrets.HOME_USER }}@${{ secrets.HOME_HOST }}" \
             "mkdir -p '${HOME_BACKEND_PATH}'"
 
-      - name: Rsync compose file to HOME
+      - name: Rsync docker-compose file to HOME
         env:
+          HOME_SSH_PORT:     ${{ secrets.HOME_SSH_PORT }}
           HOME_BACKEND_PATH: ${{ secrets.HOME_BACKEND_PATH }}
         run: |
+          PORT=${HOME_SSH_PORT:-22}
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/home_key -J ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} -o StrictHostKeyChecking=yes" \
+            -e "ssh -i ~/.ssh/home_key -J ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} -o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $PORT" \
             docker-compose.backend.yml \
             "${{ secrets.HOME_USER }}@${{ secrets.HOME_HOST }}:${HOME_BACKEND_PATH}/"
 
-      - name: Rsync backend/ to HOME
+      - name: Rsync backend/ sources to HOME
         env:
+          HOME_SSH_PORT:     ${{ secrets.HOME_SSH_PORT }}
           HOME_BACKEND_PATH: ${{ secrets.HOME_BACKEND_PATH }}
         run: |
+          PORT=${HOME_SSH_PORT:-22}
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/home_key -J ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} -o StrictHostKeyChecking=yes" \
+            -e "ssh -i ~/.ssh/home_key -J ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} -o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $PORT" \
             backend/ \
             "${{ secrets.HOME_USER }}@${{ secrets.HOME_HOST }}:${HOME_BACKEND_PATH}/backend/"
 
       - name: Docker Compose up on HOME
         env:
+          HOME_SSH_PORT:     ${{ secrets.HOME_SSH_PORT }}
           HOME_BACKEND_PATH: ${{ secrets.HOME_BACKEND_PATH }}
         run: |
-          ssh -i ~/.ssh/home_key -J "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+          PORT=${HOME_SSH_PORT:-22}
+          ssh -i ~/.ssh/home_key \
+            -J "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            -o IdentitiesOnly=yes \
+            -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
+            -p "$PORT" \
             "${{ secrets.HOME_USER }}@${{ secrets.HOME_HOST }}" "
-              set -e
+              set -euxo pipefail
               cd '${HOME_BACKEND_PATH}'
               docker compose -f docker-compose.backend.yml pull || true
               docker compose -f docker-compose.backend.yml build --pull
