@@ -111,6 +111,8 @@ jobs:
           ssh -F "$HOME/.ssh/config" home "
             set -e
             cd '$HOME_BACKEND_PATH'
+            BUILD_VERSION="${GITHUB_REF_NAME}-${GITHUB_RUN_NUMBER}-${GITHUB_SHA::7}"
+            export BUILD_VERSION
             docker compose -f docker-compose.backend.yml build --pull
             docker compose -f docker-compose.backend.yml up -d
             docker image prune -f
