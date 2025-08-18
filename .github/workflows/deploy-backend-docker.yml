@@ -1,63 +1,55 @@
-name: Deploy Backend (Docker via VPS jump)
+name: Deploy Backend (Docker via VPS)
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: [develop, main]
     paths:
       - "backend/**"
       - "docker-compose.backend.yml"
       - ".github/workflows/deploy-backend-docker.yml"
-  workflow_dispatch:
-
-concurrency:
-  group: deploy-backend
-  cancel-in-progress: false
-
-env:
-  HOME_APP_DIR: /opt/lovit/backend
-  HOME_COMPOSE_FILE: docker-compose.backend.yml
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      # VPS (публичный сервер)
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_SSH_PORT: ${{ secrets.VPS_SSH_PORT }} # можно оставить пустым; в командах есть дефолт 22
+
+      # Домашний сервер (доступен только с VPS)
+      HOME_HOST: ${{ secrets.HOME_HOST }}
+      HOME_USER: ${{ secrets.HOME_USER }}       # у тебя: lobov
+      HOME_SSH_PORT: ${{ secrets.HOME_SSH_PORT }} # можно оставить пустым; в командах есть дефолт 22
+
+      # Куда складывать на домашнем сервере
+      HOME_APP_DIR: "/opt/lovit/backend"
+      HOME_COMPOSE_FILE: "docker-compose.backend.yml"
+
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Ensure rsync & SSH client present
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y --no-install-recommends rsync openssh-client
-
-      - name: Prepare SSH (keys, config, known_hosts for VPS)
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          HOME_HOST: ${{ secrets.HOME_HOST }}
-          HOME_USER: ${{ secrets.HOME_USER }}
-          HOME_SSH_PORT: ${{ secrets.HOME_SSH_PORT }}
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          HOME_SSH_KEY: ${{ secrets.HOME_SSH_KEY }}
+      - name: Prepare SSH (keys, config, known_hosts)
+        shell: bash
         run: |
           set -euo pipefail
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
 
-          printf '%s\n' "$VPS_SSH_KEY"  > ~/.ssh/vps_key
-          printf '%s\n' "$HOME_SSH_KEY" > ~/.ssh/home_key
-          chmod 600 ~/.ssh/vps_key ~/.ssh/home_key
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
 
-          HOME_PORT="${HOME_SSH_PORT:-22}"
+          # Пишем приватные ключи
+          echo "${{ secrets.VPS_SSH_KEY }}"  > "$HOME/.ssh/vps_key"
+          echo "${{ secrets.HOME_SSH_KEY }}" > "$HOME/.ssh/home_key"
+          chmod 600 "$HOME/.ssh/vps_key" "$HOME/.ssh/home_key"
 
-          # VPS host key
-          ssh-keyscan -t ed25519 "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-          chmod 644 ~/.ssh/known_hosts
-
-          cat > ~/.ssh/config <<EOF
+          # Создаём SSH-конфиг с ProxyJump через VPS
+          cat > "$HOME/.ssh/config" <<'CFG'
           Host vps
             HostName ${VPS_HOST}
             User ${VPS_USER}
+            Port ${VPS_SSH_PORT}
             IdentityFile ~/.ssh/vps_key
             IdentitiesOnly yes
             StrictHostKeyChecking yes
@@ -66,91 +58,76 @@ jobs:
           Host home
             HostName ${HOME_HOST}
             User ${HOME_USER}
-            Port ${HOME_PORT}
+            Port ${HOME_SSH_PORT}
             IdentityFile ~/.ssh/home_key
             IdentitiesOnly yes
-            ProxyJump vps
             StrictHostKeyChecking yes
             UserKnownHostsFile ~/.ssh/known_hosts
-          EOF
-          chmod 600 ~/.ssh/config
+            ProxyJump vps
+          CFG
 
-      - name: Add HOME host key to known_hosts via VPS (with port entry)
-        env:
-          HOME_HOST: ${{ secrets.HOME_HOST }}
-          HOME_SSH_PORT: ${{ secrets.HOME_SSH_PORT }}
+          # Подставим дефолтные порты, если секреты пустые
+          VPS_SSH_PORT="${VPS_SSH_PORT:-22}"
+          HOME_SSH_PORT="${HOME_SSH_PORT:-22}"
+          export VPS_SSH_PORT HOME_SSH_PORT
+
+          # known_hosts для VPS
+          ssh-keyscan -H -p "$VPS_SSH_PORT" "$VPS_HOST" >> "$HOME/.ssh/known_hosts"
+
+          # known_hosts для HOME (сканим через VPS)
+          ssh -F "$HOME/.ssh/config" vps "ssh-keyscan -H -p '$HOME_SSH_PORT' '$HOME_HOST'" >> "$HOME/.ssh/known_hosts"
+
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Sanity check SSH connections
+        shell: bash
         run: |
           set -euo pipefail
-          HOME_PORT="${HOME_SSH_PORT:-22}"
+          ssh -F "$HOME/.ssh/config" vps  "echo '✅ VPS OK:'  \$(hostname)"
+          ssh -F "$HOME/.ssh/config" home "echo '✅ HOME OK:' \$(hostname)"
 
-          # Сканим ключ дома С VPS, чтобы реально дотянуться внутри сети
-          ssh -F ~/.ssh/config vps "ssh-keyscan -t ed25519 -p '${HOME_PORT}' '${HOME_HOST}' 2>/dev/null" > /tmp/home_keyscan || true
-
-          # 1) обычная запись host keytype key
-          cat /tmp/home_keyscan >> ~/.ssh/known_hosts || true
-
-          # 2) запись с портом: [host]:port keytype key (важно для нестандартного порта)
-          awk -v h="${HOME_HOST}" -v p="${HOME_PORT}" '
-            $1==h { $1="[" h "]:" p; print; }
-          ' /tmp/home_keyscan >> ~/.ssh/known_hosts || true
-
-          chmod 644 ~/.ssh/known_hosts
-          echo "Known_hosts entries for HOME:"
-          grep -E "(${HOME_HOST}|\\[${HOME_HOST}\\]:${HOME_PORT})" ~/.ssh/known_hosts || true
-
-      - name: Sanity-check SSH connectivity
+      - name: Ensure target dir on HOME
+        shell: bash
         run: |
           set -euo pipefail
-          ssh -F ~/.ssh/config vps  "echo '✅ VPS OK:'  \$(hostname)"
-          ssh -F ~/.ssh/config home "echo '✅ HOME OK:' \$(hostname)"
-
-      - name: Create target dir on HOME
-        env:
-          HOME_APP_DIR: ${{ env.HOME_APP_DIR }}
-        run: |
-          set -euo pipefail
-          ssh -F ~/.ssh/config home "mkdir -p '${HOME_APP_DIR}'"
+          ssh -F "$HOME/.ssh/config" home "mkdir -p '${HOME_APP_DIR}' '${HOME_APP_DIR}/backend'"
 
       - name: Rsync docker-compose to HOME
-        env:
-          HOME_APP_DIR: ${{ env.HOME_APP_DIR }}
+        shell: bash
         run: |
-            set -euo pipefail
-            rsync -avz --delete -e "ssh -F $HOME/.ssh/config" \
+          set -euo pipefail
+          rsync -avz --delete -e "ssh -F $HOME/.ssh/config" \
             docker-compose.backend.yml \
             home:"${HOME_APP_DIR}/"
 
-            - name: Rsync backend sources to HOME
-              env:
-                HOME_APP_DIR: ${{ env.HOME_APP_DIR }}
-              run: |
-                set -euo pipefail
-                rsync -avz --delete -e "ssh -F $HOME/.ssh/config" \
-                  backend/ \
-                  home:"${HOME_APP_DIR}/backend/"
+      - name: Rsync backend sources to HOME
+        shell: bash
+        run: |
+          set -euo pipefail
+          rsync -avz --delete -e "ssh -F $HOME/.ssh/config" \
+            backend/ \
+            home:"${HOME_APP_DIR}/backend/"
 
       - name: Deploy on HOME with Docker Compose
-        env:
-          HOME_APP_DIR: ${{ env.HOME_APP_DIR }}
-          HOME_COMPOSE_FILE: ${{ env.HOME_COMPOSE_FILE }}
+        shell: bash
         run: |
           set -euo pipefail
-          ssh -F ~/.ssh/config home "
-            cd '${HOME_APP_DIR}' && \
-            docker compose -f '${HOME_COMPOSE_FILE}' pull || true && \
-            docker compose -f '${HOME_COMPOSE_FILE}' build --pull && \
-            docker compose -f '${HOME_COMPOSE_FILE}' up -d && \
-            docker image prune -f
-          "
+          ssh -F "$HOME/.ssh/config" home "
+            set -euo pipefail
+            cd '${HOME_APP_DIR}'
 
-      - name: Show containers status (HOME)
-        env:
-          HOME_APP_DIR: ${{ env.HOME_APP_DIR }}
-          HOME_COMPOSE_FILE: ${{ env.HOME_COMPOSE_FILE }}
-        run: |
-          set -euo pipefail
-          ssh -F ~/.ssh/config home "
-            cd '${HOME_APP_DIR}' && \
-            docker compose -f '${HOME_COMPOSE_FILE}' ps && \
+            echo '📦 docker compose pull (если есть registry)...'
+            docker compose -f '${HOME_COMPOSE_FILE}' pull || true
+
+            echo '🔧 docker compose build backend...'
+            docker compose -f '${HOME_COMPOSE_FILE}' build backend || true
+
+            echo '🚀 docker compose up -d...'
+            docker compose -f '${HOME_COMPOSE_FILE}' up -d --remove-orphans
+
+            echo '🔎 docker compose ps:'
+            docker compose -f '${HOME_COMPOSE_FILE}' ps
+
+            echo '🔎 docker ps:'
             docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
           "
