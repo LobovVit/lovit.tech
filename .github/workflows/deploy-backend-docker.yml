@@ -111,18 +111,23 @@ jobs:
           set -euo pipefail
           ssh -F ~/.ssh/config home "mkdir -p '${HOME_APP_DIR}'"
 
-      - name: Rsync backend sources & compose to HOME
+      - name: Rsync docker-compose to HOME
         env:
           HOME_APP_DIR: ${{ env.HOME_APP_DIR }}
         run: |
-          set -euo pipefail
-          rsync -avz --delete -e "ssh -F ~/.ssh/config" \
+            set -euo pipefail
+            rsync -avz --delete -e "ssh -F $HOME/.ssh/config" \
             docker-compose.backend.yml \
             home:"${HOME_APP_DIR}/"
 
-          rsync -avz --delete -e "ssh -F ~/.ssh/config" \
-            backend/ \
-            home:"${HOME_APP_DIR}/backend/"
+            - name: Rsync backend sources to HOME
+              env:
+                HOME_APP_DIR: ${{ env.HOME_APP_DIR }}
+              run: |
+                set -euo pipefail
+                rsync -avz --delete -e "ssh -F $HOME/.ssh/config" \
+                  backend/ \
+                  home:"${HOME_APP_DIR}/backend/"
 
       - name: Deploy on HOME with Docker Compose
         env:
