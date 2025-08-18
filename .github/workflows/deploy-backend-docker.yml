@@ -49,12 +49,7 @@ jobs:
           VPS_PORT="${VPS_SSH_PORT:-22}"
           HOME_PORT="${HOME_SSH_PORT:-22}"
 
-          # known_hosts
-          ssh-keyscan -p "$VPS_PORT"  "$VPS_HOST"  >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
-          ssh-keyscan -p "$HOME_PORT" "$HOME_HOST" >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
-          chmod 644 "$HOME/.ssh/known_hosts"
-
-          # ssh config
+          # ----- SSH CONFIG (без подстановок, затем sed) -----
           cat > "$HOME/.ssh/config" <<'CFG'
           Host vps
             HostName ${VPS_HOST}
@@ -75,10 +70,19 @@ jobs:
             ServerAliveInterval 30
             ServerAliveCountMax 6
           CFG
-          # подставим переменные вручную (sed), т.к. heredoc выше зафиксирован без подстановок
+
           sed -i "s|\${VPS_HOST}|$VPS_HOST|g; s|\${VPS_USER}|$VPS_USER|g; s|\${VPS_PORT}|$VPS_PORT|g" "$HOME/.ssh/config"
           sed -i "s|\${HOME_HOST}|$HOME_HOST|g; s|\${HOME_USER}|$HOME_USER|g; s|\${HOME_PORT}|$HOME_PORT|g" "$HOME/.ssh/config"
           chmod 600 "$HOME/.ssh/config"
+
+          # ----- KNOWN_HOSTS -----
+          # VPS ключ — можно получить напрямую с раннера
+          ssh-keyscan -p "$VPS_PORT" "$VPS_HOST" >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
+
+          # HOME ключ — получаем ЧЕРЕЗ VPS (ProxyJump), т.к. runner до HOME не достучится
+          ssh -F "$HOME/.ssh/config" vps "ssh-keyscan -p '$HOME_PORT' '$HOME_HOST' 2>/dev/null" >> "$HOME/.ssh/known_hosts" || true
+
+          chmod 644 "$HOME/.ssh/known_hosts"
 
       - name: Smoke SSH
         shell: bash
