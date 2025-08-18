@@ -58,39 +58,44 @@ jobs:
 
       - name: Prepare SSH keys and config (ProxyJump)
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
-          # VPS key
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/vps_key
+          chmod 700 ~/.ssh
+
+          # Ключ для VPS
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/vps_key
           chmod 600 ~/.ssh/vps_key
-          # HOME key
-          echo "${{ secrets.HOME_SSH_KEY }}" > ~/.ssh/home_key
+
+          # Ключ для домашнего
+          printf '%s\n' "${{ secrets.HOME_SSH_KEY }}" > ~/.ssh/home_key
           chmod 600 ~/.ssh/home_key
 
-          # SSH config: define hosts and ProxyJump chain
-          cat > ~/.ssh/config << 'EOF'
+          # known_hosts (чтобы не отключать проверку)
+          touch ~/.ssh/known_hosts
+          ssh-keyscan -p 22 -T 10 ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/vps_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/known_hosts \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "ssh-keyscan -p 22 -T 10 ${{ secrets.HOME_HOST }}" >> ~/.ssh/known_hosts || true
+
+          # SSH config с подстановкой переменных
+          cat > ~/.ssh/config <<EOF
           Host vps
-            HostName ${VPS_HOST}
-            User ${VPS_USER}
+            HostName ${{ secrets.VPS_HOST }}
+            User ${{ secrets.VPS_USER }}
             IdentityFile ~/.ssh/vps_key
-            StrictHostKeyChecking no
             ServerAliveInterval 30
             ServerAliveCountMax 6
 
           Host home
-            HostName ${HOME_HOST}
-            User ${HOME_USER}
+            HostName ${{ secrets.HOME_HOST }}
+            User ${{ secrets.HOME_USER }}
             IdentityFile ~/.ssh/home_key
             ProxyJump vps
-            StrictHostKeyChecking no
             ServerAliveInterval 30
             ServerAliveCountMax 6
           EOF
 
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          HOME_HOST: ${{ secrets.HOME_HOST }}
-          HOME_USER: ${{ secrets.HOME_USER }}
+          chmod 600 ~/.ssh/config
 
       - name: Create app dir on HOME
         run: |
