@@ -1,0 +1,19 @@
+# docker-compose.backend.yml
+services:
+  backend:
+    image: ghcr.io/lobovvit/lovit.tech/backend:latest
+    container_name: lovit-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"           # если нужно слушать наружу с домашнего
+    environment:
+      TZ: Europe/Moscow
+      # TARANTOOL_HOST: ...
+      # TARANTOOL_PORT: "3301"
+    # env_file:
+    #   - .env
+
+# networks:
+#   default:
+#     name: lovit_net
+#     driver: bridge
