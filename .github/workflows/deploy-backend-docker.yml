@@ -1,34 +1,35 @@
-name: Deploy Backend (Docker via VPS → Home)
+name: Deploy Backend (Docker via VPS jump)
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ "develop" ]
     paths:
       - "backend/**"
       - "docker-compose.backend.yml"
       - ".github/workflows/deploy-backend-docker.yml"
   workflow_dispatch:
 
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+env:
+  # Куда на домашнем сервере складывать код/compose
+  HOME_APP_DIR: /opt/lovit/backend
+  HOME_COMPOSE_FILE: docker-compose.backend.yml
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    env:
-      # директория деплоя на домашнем сервере
-      HOME_DEPLOY_DIR: /opt/lovit
-      # путь compose-файла НА домашнем сервере
-      HOME_COMPOSE_FILE: /opt/lovit/docker-compose.backend.yml
-      # кастомный проект для docker compose (чтобы имена контейнеров были стабильны)
-      COMPOSE_PROJECT: lovit-backend
-
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install ssh & rsync on runner
+      - name: Ensure rsync & SSH client present
         run: |
-          sudo apt-get update
-          sudo apt-get install -y openssh-client rsync
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends rsync openssh-client
 
       - name: Prepare SSH (keys, config, known_hosts for VPS)
         env:
@@ -36,24 +37,28 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
           HOME_HOST: ${{ secrets.HOME_HOST }}
           HOME_USER: ${{ secrets.HOME_USER }}
-          HOME_PORT: ${{ secrets.HOME_SSH_PORT }}
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          HOME_SSH_KEY: ${{ secrets.HOME_SSH_KEY }}
+          HOME_SSH_PORT: ${{ secrets.HOME_SSH_PORT }}   # может быть пустым -> возьмем 22
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}       # приватный ключ для VPS (ed25519)
+          HOME_SSH_KEY: ${{ secrets.HOME_SSH_KEY }}     # приватный ключ для HOME (ed25519)
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
-          # Ключи
-          echo "$VPS_SSH_KEY"  > ~/.ssh/vps_key
-          echo "$HOME_SSH_KEY" > ~/.ssh/home_key
+          # ключи
+          printf '%s\n' "$VPS_SSH_KEY"  > ~/.ssh/vps_key
+          printf '%s\n' "$HOME_SSH_KEY" > ~/.ssh/home_key
           chmod 600 ~/.ssh/vps_key ~/.ssh/home_key
 
-          # known_hosts для VPS (чтобы StrictHostKeyChecking не падал)
+          # defaults
+          HOME_PORT="${HOME_SSH_PORT:-22}"
+
+          # known_hosts для VPS
           ssh-keyscan -t ed25519 "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
           chmod 644 ~/.ssh/known_hosts
 
-          # SSH config c ProxyJump через VPS
-          cat > ~/.ssh/config <<'CFG'
+          # ssh-config с ProxyJump через VPS
+          cat > ~/.ssh/config <<EOF
           Host vps
             HostName ${VPS_HOST}
             User ${VPS_USER}
@@ -71,14 +76,8 @@ jobs:
             ProxyJump vps
             StrictHostKeyChecking yes
             UserKnownHostsFile ~/.ssh/known_hosts
-          CFG
+          EOF
 
-          # подставим переменные окружения в конфиг (простая подстановка)
-          sed -i "s|\${VPS_HOST}|$VPS_HOST|g" ~/.ssh/config
-          sed -i "s|\${VPS_USER}|$VPS_USER|g" ~/.ssh/config
-          sed -i "s|\${HOME_HOST}|$HOME_HOST|g" ~/.ssh/config
-          sed -i "s|\${HOME_USER}|$HOME_USER|g" ~/.ssh/config
-          sed -i "s|\${HOME_PORT}|$HOME_PORT|g" ~/.ssh/config
           chmod 600 ~/.ssh/config
 
       - name: Add HOME host key to known_hosts via VPS
@@ -86,40 +85,64 @@ jobs:
           HOME_HOST: ${{ secrets.HOME_HOST }}
           HOME_SSH_PORT: ${{ secrets.HOME_SSH_PORT }}
         run: |
-          # получаем публичный ключ домашнего хоста, но запускаем ssh-keyscan на VPS
-          ssh -F ~/.ssh/config vps "ssh-keyscan -t ed25519 -p '${HOME_SSH_PORT}' '${HOME_HOST}' 2>/dev/null" >> ~/.ssh/known_hosts
+          set -euo pipefail
+          HOME_PORT="${HOME_SSH_PORT:-22}"
+          # Запрашиваем ключ домашнего хоста с VPS (внутри сети), добавляем в known_hosts раннера
+          ssh -F ~/.ssh/config vps "ssh-keyscan -t ed25519 -p '${HOME_PORT}' '${HOME_HOST}' 2>/dev/null" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
           echo "Known_hosts entry for HOME:"
           grep "${HOME_HOST}" ~/.ssh/known_hosts || true
 
-      - name: Sanity check SSH to VPS and HOME
+      - name: Sanity-check SSH connectivity
         run: |
+          set -euo pipefail
           ssh -F ~/.ssh/config vps  "echo '✅ VPS OK:'  \$(hostname)"
           ssh -F ~/.ssh/config home "echo '✅ HOME OK:' \$(hostname)"
 
-      - name: Rsync compose & backend to HOME
-        # Синхронизируем docker-compose.backend.yml из корня репозитория и папку backend/
+      - name: Create target dir on HOME
+        env:
+          HOME_APP_DIR: ${{ env.HOME_APP_DIR }}
         run: |
-          ssh -F ~/.ssh/config home "sudo mkdir -p '${HOME_DEPLOY_DIR}' && sudo chown -R \$USER:\$USER '${HOME_DEPLOY_DIR}'"
+          set -euo pipefail
+          ssh -F ~/.ssh/config home "mkdir -p '${HOME_APP_DIR}'"
+
+      - name: Rsync backend sources & compose to HOME
+        env:
+          HOME_APP_DIR: ${{ env.HOME_APP_DIR }}
+        run: |
+          set -euo pipefail
+          # docker-compose file (в корне репо)
           rsync -avz --delete -e "ssh -F ~/.ssh/config" \
             docker-compose.backend.yml \
-            backend/ \
-            home:"${HOME_DEPLOY_DIR}/"
+            home:"${HOME_APP_DIR}/"
 
-      - name: Deploy on HOME (docker compose up -d --build)
+          # код backend/
+          rsync -avz --delete -e "ssh -F ~/.ssh/config" \
+            backend/ \
+            home:"${HOME_APP_DIR}/backend/"
+
+      - name: Deploy on HOME with Docker Compose
+        env:
+          HOME_APP_DIR: ${{ env.HOME_APP_DIR }}
+          HOME_COMPOSE_FILE: ${{ env.HOME_COMPOSE_FILE }}
         run: |
+          set -euo pipefail
           ssh -F ~/.ssh/config home "
-            cd '${HOME_DEPLOY_DIR}' && \
-            docker compose -p '${COMPOSE_PROJECT}' -f '${HOME_COMPOSE_FILE}' pull && \
-            docker compose -p '${COMPOSE_PROJECT}' -f '${HOME_COMPOSE_FILE}' up -d --build && \
-            docker system prune -f
+            cd '${HOME_APP_DIR}' && \
+            docker compose -f '${HOME_COMPOSE_FILE}' pull || true && \
+            docker compose -f '${HOME_COMPOSE_FILE}' build --pull && \
+            docker compose -f '${HOME_COMPOSE_FILE}' up -d && \
+            docker image prune -f
           "
 
-      - name: Show compose status
-        if: always()
+      - name: Show containers status (HOME)
+        env:
+          HOME_APP_DIR: ${{ env.HOME_APP_DIR }}
+          HOME_COMPOSE_FILE: ${{ env.HOME_COMPOSE_FILE }}
         run: |
+          set -euo pipefail
           ssh -F ~/.ssh/config home "
-            cd '${HOME_DEPLOY_DIR}' && \
-            docker compose -p '${COMPOSE_PROJECT}' -f '${HOME_COMPOSE_FILE}' ps && \
+            cd '${HOME_APP_DIR}' && \
+            docker compose -f '${HOME_COMPOSE_FILE}' ps && \
             docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
           "
