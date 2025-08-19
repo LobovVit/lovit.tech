@@ -1,106 +1,96 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru" data-theme="light">
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>lovit.tech</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<!-- фон -->
+<!-- ФОН -->
 <div id="bg" aria-hidden="true"></div>
 
-<!-- header -->
-<header class="site-header">
+<!-- HEADER -->
+<header class="site-header" style="--header-h:64px">
     <div class="header-left">
-        <a class="logo" href="/">
+        <a class="logo" href="#top" aria-label="На главную">
             <img id="logoImg" src="images/logo-light.png" alt="LV" />
         </a>
         <div class="brand">
-            <span class="brand-text">Digital-studia LV</span>
+            <span class="brand-text" aria-label="Digital-studia LV">Digital-studia LV</span>
         </div>
     </div>
 
-    <nav class="header-actions" aria-label="Главная навигация">
-        <!-- Навигация по блокам -->
-        <button class="pill" data-goto="block-ads">Реклама</button>
-        <button class="pill" data-goto="block-audit">Аудит</button>
-        <button class="pill" data-goto="block-sites">Сайты</button>
-        <button class="pill" data-goto="block-mobile">Мобильные</button>
+    <nav class="header-actions">
+        <a class="pill" data-goto="adv"><span class="pill-label">Реклама</span></a>
+        <a class="pill" data-goto="audit"><span class="pill-label">Аудит</span></a>
+        <a class="pill" data-goto="sites"><span class="pill-label">Сайты</span></a>
+        <a class="pill" data-goto="mobile"><span class="pill-label">Мобильные</span></a>
 
-        <!-- разделитель фиксированной ширины -->
         <div class="spacer" aria-hidden="true"></div>
 
-        <!-- Соцсети — тоже pill -->
-<!--        <a class="pill" href="https://t.me/your_telegram" target="_blank" rel="noopener">Telegram</a>-->
-<!--        <a class="pill" href="https://wa.me/79990000000" target="_blank" rel="noopener">WhatsApp</a>-->
-        <a href="https://t.me/yourchannel" target="_blank" class="chip icon-btn" aria-label="Telegram">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="icon">
-                <path d="M9.999 15.2L9.9 18.9c.4 0 .6-.2.9-.4l2.1-2 4.3 3.2c.8.5 1.4.3 1.6-.8l3-13.8c.3-1.2-.4-1.7-1.2-1.4L2.9 9.3c-1.2.5-1.2 1.2-.2 1.5l4.3 1.3 10-6.3c.5-.3.9-.1.5.2l-8.6 8.3z"/>
-            </svg>
+        <!-- Иконки мессенджеров -->
+        <a class="pill pill-icon" href="https://t.me/your_telegram" target="_blank" rel="noopener" aria-label="Telegram">
+            <span class="icon social telegram"></span>
+        </a>
+        <a class="pill pill-icon" href="https://wa.me/71234567890" target="_blank" rel="noopener" aria-label="WhatsApp">
+            <span class="icon social whatsapp"></span>
         </a>
 
-        <a href="https://wa.me/79991234567" target="_blank" class="chip icon-btn" aria-label="WhatsApp">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="currentColor" class="icon">
-                <path d="M380.9 97.1C339-3.9 215.5-32.3 121.1 28.5 37.5 85.5 6.7 187.4 50.2 278.2L7.4 466.6l192.5-50.6c86.5 36.8 187.3 1.5 243.5-84.3 59.8-92.3 31.7-216-62.5-234.6zM222.3 347.7c-29.3 0-58.1-7.9-83.2-22.8l-5.9-3.5-49.4 13 13.2-48.2-3.8-6.2c-15.6-25.6-23.8-55.1-23.8-85.5 0-88.5 72-160.5 160.6-160.5 42.9 0 83.2 16.7 113.5 47 30.3 30.3 47 70.6 47 113.4 0 88.6-72 160.6-160.6 160.6zm89.2-118.4c-4.9-2.4-29-14.3-33.5-15.9-4.5-1.7-7.8-2.4-11.1 2.4s-12.7 15.9-15.6 19.1c-2.9 3.2-5.7 3.6-10.6 1.2-29.3-14.6-48.6-26.1-68-59-5.1-8.8 5.1-8.1 14.6-27 1.6-3.2.8-5.9-.5-8.3-1.3-2.4-11.1-26.8-15.2-36.8-4-9.7-8.1-8.4-11.1-8.6-2.9-.1-6.2-.1-9.5-.1s-8.3 1.2-12.7 5.9c-4.5 4.9-17.3 16.9-17.3 41.1s17.7 47.7 20.1 51c2.4 3.2 34.7 53 84.1 74.3 49.4 21.2 49.4 14.1 58.3 13.3 8.9-.8 29-11.8 33.1-23.3 4-11.6 4-21.5 2.8-23.3-1.2-1.7-4.4-2.9-9.3-5.3z"/>
-            </svg>
-        </a>
-
-        <!-- смена темы как pill с иконкой -->
-        <button id="themeToggle" class="pill pill-icon" title="Сменить тему" aria-label="Сменить тему">
-            <span class="icon theme" aria-hidden="true"></span>
+        <button id="themeToggle" class="pill pill-icon" type="button" aria-label="Сменить тему">
+            <span class="icon theme"></span>
         </button>
 
-        <!-- войти как pill с иконкой -->
-        <button id="openAuth" class="pill pill-icon" title="Войти">
-            <span class="icon user" aria-hidden="true"></span>
-            <span class="pill-label">Войти</span>
+        <button id="openAuth" class="pill pill-icon" type="button" aria-label="Войти">
+            <span class="icon user"></span>
         </button>
     </nav>
 </header>
 
-<!-- контент -->
-<main class="content">
+<!-- КОНТЕНТ -->
+<main class="content" id="top">
+    <!-- Плитки (падают под шапку, не перекрывая её) -->
     <section class="tiles">
-        <a class="tile" style="--i:0" data-goto="block-ads"><h3>Реклама</h3><p>Контент блока «Реклама»</p></a>
-        <a class="tile" style="--i:1" data-goto="block-audit"><h3>Аудит рекламных кампаний</h3><p>Контент блока «Аудит»</p></a>
-        <a class="tile" style="--i:2" data-goto="block-sites"><h3>Сайты</h3><p>Контент блока «Сайты»</p></a>
-        <a class="tile" style="--i:3" data-goto="block-mobile"><h3>Мобильные приложения</h3><p>Контент блока «Мобильные»</p></a>
+        <a class="tile" style="--i:0" data-goto="adv"><h3>Реклама</h3><p>Запустим/масштабируем</p></a>
+        <a class="tile" style="--i:1" data-goto="audit"><h3>Аудит</h3><p>Проверим гипотезы</p></a>
+        <a class="tile" style="--i:2" data-goto="sites"><h3>Сайты</h3><p>Лендинги и витрины</p></a>
+        <a class="tile" style="--i:3" data-goto="mobile"><h3>Мобильные</h3><p>iOS/Android</p></a>
     </section>
 
-    <section id="block-ads" class="block"><h2>Реклама</h2><p>…</p></section>
-    <section id="block-audit" class="block"><h2>Аудит</h2><p>…</p></section>
-    <section id="block-sites" class="block"><h2>Сайты</h2><p>…</p></section>
-    <section id="block-mobile" class="block"><h2>Мобильные приложения</h2><p>…</p></section>
+    <section id="adv"   class="block"><h2>Реклама</h2><p>Контент блока «Реклама»…</p></section>
+    <section id="audit" class="block"><h2>Аудит</h2><p>Контент блока «Аудит»…</p></section>
+    <section id="sites" class="block"><h2>Сайты</h2><p>Контент блока «Сайты»…</p></section>
+    <section id="mobile"class="block"><h2>Мобильные</h2><p>Контент блока «Мобильные»…</p></section>
 </main>
 
-<!-- модалка авторизации -->
+<!-- МОДАЛКА -->
 <div id="authModal" class="modal" aria-hidden="true">
     <div class="modal__backdrop" data-close></div>
     <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="authTitle">
         <div class="modal__header">
             <h3 id="authTitle">Аккаунт</h3>
-            <button class="pill pill-icon" data-close title="Закрыть">
-                <span class="icon close" aria-hidden="true"></span>
+            <button class="pill pill-icon" type="button" data-close aria-label="Закрыть">
+                <span class="icon close"></span>
             </button>
         </div>
 
         <div class="tabs" role="tablist">
-            <button class="tab active" data-tab="login" role="tab" aria-selected="true">Вход</button>
+            <button class="tab" data-tab="login" role="tab" aria-selected="true">Вход</button>
             <button class="tab" data-tab="signup" role="tab" aria-selected="false">Регистрация</button>
         </div>
 
         <div class="tabpanes">
-            <form id="pane-login" class="pane active">
-                <label> Email <input type="email" placeholder="you@email.com" required /></label>
-                <label> Пароль <input type="password" placeholder="••••••••" required /></label>
+            <form id="pane-login"  class="pane" autocomplete="on">
+                <label> E-mail <input type="email" autocomplete="email" required></label>
+                <label> Пароль <input type="password" autocomplete="current-password" required></label>
                 <button class="pill wide" type="submit">Войти</button>
             </form>
 
-            <form id="pane-signup" class="pane">
-                <label> Email <input type="email" placeholder="you@email.com" required /></label>
-                <label> Пароль <input type="password" placeholder="Минимум 8 символов" required /></label>
-                <button class="pill wide" type="submit">Зарегистрироваться</button>
+            <form id="pane-signup" class="pane" autocomplete="on">
+                <label> E-mail <input type="email" required></label>
+                <label> Пароль <input type="password" required></label>
+                <label> Имя <input type="text" autocomplete="name"></label>
+                <button class="pill wide" type="submit">Создать аккаунт</button>
             </form>
         </div>
     </div>

@@ -11,17 +11,17 @@
     --shadow:0 10px 30px rgba(0,0,0,.12);
     --backdrop-blur:blur(12px);
 }
-
 [data-theme="dark"]{
-    --surface: rgba(44, 44, 46, 0.7);         /* было 28,28,30 */
-    --surface-strong: rgba(58, 58, 60, 0.85); /* было 28,28,30 */
+    /* светлее подложка в тёмной теме */
+    --surface: rgba(44,44,46,.70);
+    --surface-strong: rgba(58,58,60,.85);
     --text:#f2f2f7;
     --muted:#a1a1a6;
     --accent:#0a84ff;
     --shadow:0 10px 30px rgba(0,0,0,.35);
 }
 
-/* reset */
+/* базовая типографика — единый стек */
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -30,7 +30,7 @@ body{
     color:var(--text);
 }
 
-/* background */
+/* фон */
 #bg{
     position:fixed;inset:0;z-index:-1;
     background-image:var(--bg-light);
@@ -38,8 +38,9 @@ body{
     will-change:background-position;
     animation:float-bg 40s ease-in-out infinite;
 }
-[data-theme="dark"] #bg{background-image:var(--bg-dark)}
+[data-theme="dark"] #bg{ background-image:var(--bg-dark) }
 
+/* круговое мягкое движение */
 @keyframes float-bg{
     0%{background-position:50% 50%}
     5%{background-position:51% 49%}
@@ -62,7 +63,7 @@ body{
     90%,95%,100%{background-position:50% 50%}
 }
 
-/* header */
+/* шапка */
 .site-header{
     position:sticky;top:0;z-index:1000;
     display:flex;align-items:center;justify-content:space-between;gap:16px;
@@ -76,7 +77,7 @@ body{
 /* логотип — сохраняем пропорции */
 .logo img{display:block;height:36px;width:auto;max-width:44px}
 
-/* бренд анимация */
+/* бренд с анимацией «въезда» + «печати» */
 .brand{overflow:hidden;max-width:100%}
 .brand-text{
     display:inline-block;white-space:nowrap;
@@ -87,13 +88,12 @@ body{
 @keyframes brand-enter{to{transform:translateX(0);opacity:1}}
 @keyframes brand-type{from{width:0;border-right-color:currentColor}85%{border-right-color:currentColor}to{width:100%;border-right-color:transparent}}
 
-/* header actions */
 .header-actions{display:flex;align-items:center;gap:10px;margin-left:auto}
 
 /* единый стиль кнопок */
 .pill{
     height:36px;padding:0 14px;
-    border-radius:999px;border:1px solid rgba(0,0,0,.1);
+    border-radius:999px;border:1px solid rgba(0,0,0,.10);
     background:var(--surface-strong);color:var(--text);
     display:inline-flex;align-items:center;justify-content:center;gap:8px;
     box-shadow:var(--shadow);
@@ -103,18 +103,20 @@ body{
 .pill:hover{transform:translateY(-1px);border-color:rgba(0,0,0,.18)}
 .pill:active{transform:translateY(0)}
 .pill-icon{padding:0 12px}
-.pill .icon{width:18px;height:18px;display:inline-block}
 .pill .pill-label{margin-left:4px}
 
-/* SVG-иконки через mask */
-.icon.theme{mask:url("icons/theme.svg") no-repeat center/contain;-webkit-mask:url("icons/theme.svg") no-repeat center/contain;background:currentColor}
-.icon.user{mask:url("icons/user.svg") no-repeat center/contain;-webkit-mask:url("icons/user.svg") no-repeat center/contain;background:currentColor}
-.icon.close{mask:url("icons/close.svg") no-repeat center/contain;-webkit-mask:url("icons/close.svg") no-repeat center/contain;background:currentColor}
+/* SVG-иконки через mask (цвет берут из currentColor) */
+.icon{width:18px;height:18px;display:inline-block;background:currentColor}
+.icon.theme   {mask:url("icons/theme.svg") no-repeat center/contain;-webkit-mask:url("icons/theme.svg") no-repeat center/contain}
+.icon.user    {mask:url("icons/user.svg") no-repeat center/contain;-webkit-mask:url("icons/user.svg") no-repeat center/contain}
+.icon.close   {mask:url("icons/close.svg") no-repeat center/contain;-webkit-mask:url("icons/close.svg") no-repeat center/contain}
+.icon.telegram{mask:url("icons/telegram.svg") no-repeat center/contain;-webkit-mask:url("icons/telegram.svg") no-repeat center/contain}
+.icon.whatsapp{mask:url("icons/whatsapp.svg") no-repeat center/contain;-webkit-mask:url("icons/whatsapp.svg") no-repeat center/contain}
 
-/* разделитель */
+/* разделитель-пустышка */
 .spacer{width:56px;flex:0 0 56px}
 
-/* контент / плитки */
+/* контент и плитки */
 .content{padding:calc(var(--header-h) + 16px) clamp(18px,3vw,28px) clamp(18px,3vw,28px)}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin:18px 0 26px}
 .tile{
@@ -136,7 +138,7 @@ body{
     scroll-margin-top:calc(var(--header-h) + 12px);
 }
 
-/* модалка */
+/* модальное окно */
 .modal{position:fixed;inset:0;display:none}
 .modal.open{display:block}
 .modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px)}
@@ -152,35 +154,19 @@ body{
 [data-theme="dark"] .tab.active{background:rgba(158,158,160,.25);color:#fff}
 .tabpanes .pane{display:none}
 .tabpanes .pane.active{display:grid;gap:10px}
-label{display:grid;gap:6px;font-size:14px;color:var(--text)}
+label{display:grid;gap:6px;font-size:14px}
 input{height:40px;border-radius:10px;border:1px solid rgba(0,0,0,.15);background:var(--surface);color:var(--text);padding:0 12px}
 .pill.wide{width:100%}
 
-/* адаптив */
+/* мобильный */
+@media (max-width:720px){
+    .logo img{height:32px}
+}
 @media (max-width:520px){
     .brand{display:none}
     .spacer{display:none}
-}
-
-/* Универсальный стиль для иконок в панели */
-.icon-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--btn-bg);
-    color: var(--btn-fg);
-    transition: background 0.3s, color 0.3s;
-}
-
-.icon-btn:hover {
-    background: var(--btn-hover-bg);
-    color: var(--btn-hover-fg);
-}
-
-.icon-btn .icon {
-    width: 20px;
-    height: 20px;
+    .header-actions{gap:8px}
+    .pill{height:34px;padding:0 12px}
+    .pill-icon{padding:0 10px}
+    .tiles{grid-template-columns:1fr;gap:14px}
 }
