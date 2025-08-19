@@ -161,3 +161,26 @@ input{height:40px;border-radius:10px;border:1px solid rgba(0,0,0,.15);background
     .brand{display:none}
     .spacer{display:none}
 }
+
+/* Универсальный стиль для иконок в панели */
+.icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    transition: background 0.3s, color 0.3s;
+}
+
+.icon-btn:hover {
+    background: var(--btn-hover-bg);
+    color: var(--btn-hover-fg);
+}
+
+.icon-btn .icon {
+    width: 20px;
+    height: 20px;
+}
