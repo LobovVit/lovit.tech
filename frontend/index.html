@@ -1,94 +1,97 @@
 <!doctype html>
 <html lang="ru" data-theme="light">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>lovit.tech</title>
-    <link rel="stylesheet" href="style.css"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LOVIT</title>
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <header>
-    <h1>lovit.tech</h1>
+    <h1>LOVIT</h1>
 
-    <!-- плитки-навигация -->
-    <nav class="tiles" aria-label="Разделы">
-        <button class="tile" data-target="adv" title="Реклама">📣</button>
-        <button class="tile" data-target="audit" title="Аудит">🔍</button>
-        <button class="tile" data-target="sites" title="Сайты">🧩</button>
-        <button class="tile" data-target="mobile" title="Моб. приложения">📱</button>
+    <nav class="tiles">
+        <button class="tile" data-target="section-ads" title="Реклама">📣</button>
+        <button class="tile" data-target="section-audit" title="Аудит">🧭</button>
+        <button class="tile" data-target="section-sites" title="Сайты">🧩</button>
+        <button class="tile" data-target="section-apps" title="Мобильные">📱</button>
     </nav>
 
     <div class="header-actions">
-        <button id="theme-toggle" aria-label="Переключить тему">🌗</button>
+        <button id="theme-toggle" title="Переключить тему">🌓</button>
         <button id="login-btn" class="btn btn-primary">Войти</button>
     </div>
 </header>
 
 <main>
-    <section id="adv" class="section-block">
+    <section id="section-ads"   class="section-block">
         <h2>Реклама</h2>
-        <p>Настройка и оптимизация рекламных кампаний.</p>
+        <p>Настраиваем и оптимизируем рекламные кампании.</p>
+        <button class="btn btn-primary">Подробнее</button>
+        <p class="form-hint">Нет аккаунта? <a href="#" data-open-auth data-tab="signup">Регистрация</a></p>
     </section>
 
-    <section id="audit" class="section-block">
+    <section id="section-audit" class="section-block">
         <h2>Аудит рекламных кампаний</h2>
-        <p>Разбор, метрики, рекомендации и план улучшений.</p>
+        <p>Проводим аудит кампаний и помогаем повышать ROI.</p>
+        <button class="btn btn-primary">Заказать аудит</button>
     </section>
 
-    <section id="sites" class="section-block">
+    <section id="section-sites" class="section-block">
         <h2>Создание сайтов</h2>
-        <p>Лендинги, корпоративные сайты, интеграции и анимации.</p>
+        <p>Проектирование, дизайн, разработка и поддержка.</p>
+        <button class="btn btn-primary">Оставить заявку</button>
     </section>
 
-    <section id="mobile" class="section-block">
+    <section id="section-apps"  class="section-block">
         <h2>Мобильные приложения</h2>
-        <p>Проектирование, разработка и публикация в сторах.</p>
+        <p>iOS/Android — нативно или на кросс-платформе.</p>
+        <button class="btn btn-primary">Обсудить проект</button>
     </section>
 </main>
 
-<!-- МОДАЛКА АВТОРИЗАЦИИ -->
-<div id="auth-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal__dialog" role="document">
-        <button class="modal__close" id="auth-close" aria-label="Закрыть">✕</button>
+<!-- Модалка авторизации/регистрации -->
+<div id="auth-modal" class="modal" aria-hidden="true">
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <button id="auth-close" class="modal__close" aria-label="Закрыть">✖</button>
+        <h3 id="auth-title" style="margin:0 0 .5rem;">Аккаунт</h3>
 
-        <div class="tabs" role="tablist" aria-label="Авторизация">
-            <button class="tab active" id="tab-login"  role="tab" aria-selected="true"  aria-controls="panel-login">Вход</button>
-            <button class="tab"         id="tab-signup" role="tab" aria-selected="false" aria-controls="panel-signup">Регистрация</button>
+        <div class="tabs">
+            <button class="tab" data-tab="login">Вход</button>
+            <button class="tab" data-tab="signup">Регистрация</button>
         </div>
 
-        <!-- ВХОД -->
-        <form id="form-login" class="form active" aria-labelledby="tab-login" role="tabpanel" tabindex="0">
-            <label class="field">
-                <span>E-mail</span>
-                <input type="email" name="email" required placeholder="you@example.com" autocomplete="email"/>
-            </label>
-            <label class="field">
-                <span>Пароль</span>
-                <input type="password" name="password" required minlength="6" placeholder="••••••••" autocomplete="current-password"/>
-            </label>
+        <form id="form-login" class="form" autocomplete="on">
+            <div class="field">
+                <label>E-mail</label>
+                <input type="email" name="email" required />
+            </div>
+            <div class="field">
+                <label>Пароль</label>
+                <input type="password" name="password" required />
+            </div>
             <button type="submit" class="btn btn-primary btn-full">Войти</button>
-            <p class="form-hint">Ещё нет аккаунта? <a href="#" id="to-signup">Зарегистрироваться</a></p>
+            <p class="form-hint">Нет аккаунта? <a href="#" data-tab-switch="signup">Зарегистрируйтесь</a></p>
         </form>
 
-        <!-- РЕГИСТРАЦИЯ -->
-        <form id="form-signup" class="form" aria-labelledby="tab-signup" role="tabpanel" tabindex="0" hidden>
-            <label class="field">
-                <span>Имя</span>
-                <input type="text" name="name" required placeholder="Иван"/>
-            </label>
-            <label class="field">
-                <span>E-mail</span>
-                <input type="email" name="email" required placeholder="you@example.com" autocomplete="email"/>
-            </label>
-            <label class="field">
-                <span>Пароль</span>
-                <input type="password" name="password" required minlength="6" placeholder="Минимум 6 символов" autocomplete="new-password"/>
-            </label>
+        <form id="form-signup" class="form" autocomplete="on">
+            <div class="field">
+                <label>Имя</label>
+                <input type="text" name="name" required />
+            </div>
+            <div class="field">
+                <label>E-mail</label>
+                <input type="email" name="email" required />
+            </div>
+            <div class="field">
+                <label>Пароль</label>
+                <input type="password" name="password" minlength="6" required />
+            </div>
             <button type="submit" class="btn btn-primary btn-full">Создать аккаунт</button>
-            <p class="form-hint">Уже есть аккаунт? <a href="#" id="to-login">Войти</a></p>
+            <p class="form-hint">Уже есть аккаунт? <a href="#" data-tab-switch="login">Войти</a></p>
         </form>
 
-        <p id="auth-message" class="auth-message" role="status" aria-live="polite"></p>
+        <div id="auth-message" class="auth-message"></div>
     </div>
 </div>
 

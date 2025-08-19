@@ -1,38 +1,38 @@
-// ===== ТЕМА (как было)
+// ===== ТЕМА
 const themeToggle = document.getElementById('theme-toggle');
 const savedTheme = localStorage.getItem('theme');
-const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
 function applyTheme(mode) {
     document.documentElement.setAttribute('data-theme', mode === 'dark' ? 'dark' : 'light');
     localStorage.setItem('theme', mode);
 }
-applyTheme(savedTheme || (prefersDark ? 'dark' : 'light'));
+applyTheme(savedTheme || (prefersDark.matches ? 'dark' : 'light'));
+
+// слушаем системную смену темы
+prefersDark.addEventListener('change', (e) => {
+    if (!localStorage.getItem('theme')) {
+        applyTheme(e.matches ? 'dark' : 'light');
+    }
+});
+
 themeToggle?.addEventListener('click', () => {
     const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
     applyTheme(current === 'dark' ? 'light' : 'dark');
 });
 
-// ===== ПОКАЗ ПЛИТОК И СЕКЦИЙ
+// ===== ПЛИТКИ + СЕКЦИИ
 function revealTiles() {
-    const tiles = document.querySelectorAll('.tile');
-    tiles.forEach((el, i) => {
+    document.querySelectorAll('.tile').forEach((el, i) => {
         setTimeout(() => el.classList.add('visible'), 80 * i);
     });
 }
 function revealSectionsOnScroll() {
-    const sections = document.querySelectorAll('.section-block');
-    const io = new IntersectionObserver(
-        (entries) => {
-            entries.forEach((e) => {
-                if (e.isIntersecting) e.target.classList.add('visible');
-            });
-        },
-        { threshold: 0.15 }
-    );
-    sections.forEach((s) => io.observe(s));
+    const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.section-block').forEach(s => io.observe(s));
 }
-
-// Плавный скролл к секциям по клику на плитки
 function bindTilesNavigation() {
     document.querySelectorAll('.tile[data-target]').forEach((tile) => {
         tile.addEventListener('click', () => {
@@ -43,100 +43,110 @@ function bindTilesNavigation() {
     });
 }
 
-// ====== МОДАЛКА ЛОГИН/СИГНАП ======
-const loginBtn = document.getElementById('login-btn');
-const modal = document.getElementById('auth-modal');
+// ===== МОДАЛКА
+const loginBtn   = document.getElementById('login-btn');
+const modal      = document.getElementById('auth-modal');
 const modalClose = document.getElementById('auth-close');
-const tabs = document.querySelectorAll('.tab');
-const formLogin = document.getElementById('form-login');
+const tabs       = document.querySelectorAll('.tab');
+const formLogin  = document.getElementById('form-login');
 const formSignup = document.getElementById('form-signup');
-const msg = document.getElementById('auth-message');
+const msg        = document.getElementById('auth-message');
 
-function openModal() { modal?.classList.add('open'); }
-function closeModal() { modal?.classList.remove('open'); msg && (msg.textContent = ''); }
+function openModal() {
+    modal?.classList.add('open');
+    modal?.setAttribute('aria-hidden', 'false');
+}
+function closeModal() {
+    modal?.classList.remove('open');
+    modal?.setAttribute('aria-hidden', 'true');
+    if (msg) msg.textContent = '';
+}
 function setTab(name) {
     tabs.forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
     formLogin?.classList.toggle('active', name === 'login');
     formSignup?.classList.toggle('active', name === 'signup');
 }
-loginBtn?.addEventListener('click', openModal);
+
+loginBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    openModal();
+    setTab('login');
+});
 modalClose?.addEventListener('click', closeModal);
 modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-tabs.forEach((t) => {
-    t.addEventListener('click', () => setTab(t.dataset.tab));
+
+// клик по «Регистрация/Войти» внутри подсказок
+document.addEventListener('click', (e) => {
+    const a = e.target.closest('[data-tab-switch]');
+    if (!a) return;
+    e.preventDefault();
+    openModal();
+    setTab(a.getAttribute('data-tab-switch') || 'login');
 });
-setTab('login'); // вкладка по умолчанию
 
-// ===== МАЛЕНЬКИЙ ХЕЛПЕР ДЛЯ ЗАПРОСОВ
+// кнопки снаружи, которые хотят сразу открыть модалку на нужной вкладке
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-open-auth]');
+    if (!btn) return;
+    e.preventDefault();
+    openModal();
+    const tab = btn.getAttribute('data-tab') || 'login';
+    setTab(tab);
+});
+
+// ===== API helper (заглушка)
 async function apiPost(url, payload) {
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        // если перейдёшь на cookie-сессии: credentials: 'include',
-    });
-    const text = await res.text();
-    let data;
-    try { data = text ? JSON.parse(text) : {}; } catch { data = { message: text }; }
-    if (!res.ok) {
-        const msg = data?.error || data?.message || `HTTP ${res.status}`;
-        const e = new Error(msg); e.status = res.status; e.data = data; throw e;
-    }
-    return data;
+    // пока бэкенд не готов — просто эмулируем успешный ответ
+    await new Promise(r => setTimeout(r, 500));
+    return { ok: true, token: 'demo-token' };
 }
-function saveToken(token) { if (token) localStorage.setItem('auth_token', token); }
-function clearToken() { localStorage.removeItem('auth_token'); }
+function saveToken(t){ if(t) localStorage.setItem('auth_token', t); }
 
-// ===== ФОРМЫ АВТОРИЗАЦИИ/РЕГИСТРАЦИИ
 formLogin?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    msg.textContent = '';
     const submitBtn = formLogin.querySelector('button[type="submit"]');
+    const status = document.getElementById('auth-message');
+    status.textContent = '';
     submitBtn.disabled = true; submitBtn.textContent = 'Входим…';
-    try {
+    try{
         const data = Object.fromEntries(new FormData(formLogin).entries());
-        if (!data.email || !data.password) throw new Error('Заполните e-mail и пароль.');
-        const resp = await apiPost('/api/auth/login', {
-            email: String(data.email).trim(),
-            password: String(data.password),
-        });
+        if(!data.email || !data.password) throw new Error('Заполните e-mail и пароль.');
+        const resp = await apiPost('/api/auth/login', data);
         saveToken(resp.token);
-        msg.textContent = '✅ Успешный вход';
+        status.textContent = '✅ Успешный вход';
         setTimeout(closeModal, 700);
-    } catch (err) {
-        msg.textContent = `❌ ${err.message || 'Ошибка авторизации'}`;
-    } finally {
+    }catch(err){
+        status.textContent = `❌ ${err.message || 'Ошибка авторизации'}`;
+    }finally{
         submitBtn.disabled = false; submitBtn.textContent = 'Войти';
     }
 });
 
 formSignup?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    msg.textContent = '';
     const submitBtn = formSignup.querySelector('button[type="submit"]');
+    const status = document.getElementById('auth-message');
+    status.textContent = '';
     submitBtn.disabled = true; submitBtn.textContent = 'Создаём…';
-    try {
+    try{
         const data = Object.fromEntries(new FormData(formSignup).entries());
-        if (!data.name || !data.email || !data.password) throw new Error('Заполните все поля.');
-        if (String(data.password).length < 6) throw new Error('Пароль от 6 символов.');
-        const resp = await apiPost('/api/auth/signup', {
-            name: String(data.name).trim(),
-            email: String(data.email).trim(),
-            password: String(data.password),
-        });
-        if (resp.token) saveToken(resp.token);
-        msg.textContent = '✅ Аккаунт создан';
+        if(!data.name || !data.email || !data.password) throw new Error('Заполните все поля.');
+        if(String(data.password).length < 6) throw new Error('Пароль от 6 символов.');
+        const resp = await apiPost('/api/auth/signup', data);
+        saveToken(resp.token);
+        status.textContent = '✅ Аккаунт создан';
         setTimeout(() => setTab('login'), 800);
-    } catch (err) {
-        msg.textContent = `❌ ${err.message || 'Ошибка регистрации'}`;
-    } finally {
+    }catch(err){
+        status.textContent = `❌ ${err.message || 'Ошибка регистрации'}`;
+    }finally{
         submitBtn.disabled = false; submitBtn.textContent = 'Создать аккаунт';
     }
 });
 
-// ===== СТАРТ
+// ===== старт
 document.addEventListener('DOMContentLoaded', () => {
     revealTiles();
     revealSectionsOnScroll();
     bindTilesNavigation();
+    setTab('login'); // по умолчанию — вкладка входа
 });
