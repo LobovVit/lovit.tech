@@ -1,12 +1,79 @@
-// === ... всё, что выше, оставить без изменений ===
+// ===== ТЕМА (как было)
+const themeToggle = document.getElementById('theme-toggle');
+const savedTheme = localStorage.getItem('theme');
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+function applyTheme(mode) {
+    document.documentElement.setAttribute('data-theme', mode === 'dark' ? 'dark' : 'light');
+    localStorage.setItem('theme', mode);
+}
+applyTheme(savedTheme || (prefersDark ? 'dark' : 'light'));
+themeToggle?.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+});
 
-// МАЛЕНЬКИЙ ХЕЛПЕР ДЛЯ ЗАПРОСОВ
+// ===== ПОКАЗ ПЛИТОК И СЕКЦИЙ
+function revealTiles() {
+    const tiles = document.querySelectorAll('.tile');
+    tiles.forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), 80 * i);
+    });
+}
+function revealSectionsOnScroll() {
+    const sections = document.querySelectorAll('.section-block');
+    const io = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((e) => {
+                if (e.isIntersecting) e.target.classList.add('visible');
+            });
+        },
+        { threshold: 0.15 }
+    );
+    sections.forEach((s) => io.observe(s));
+}
+
+// Плавный скролл к секциям по клику на плитки
+function bindTilesNavigation() {
+    document.querySelectorAll('.tile[data-target]').forEach((tile) => {
+        tile.addEventListener('click', () => {
+            const id = tile.getAttribute('data-target');
+            const el = id ? document.getElementById(id) : null;
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+}
+
+// ====== МОДАЛКА ЛОГИН/СИГНАП ======
+const loginBtn = document.getElementById('login-btn');
+const modal = document.getElementById('auth-modal');
+const modalClose = document.getElementById('auth-close');
+const tabs = document.querySelectorAll('.tab');
+const formLogin = document.getElementById('form-login');
+const formSignup = document.getElementById('form-signup');
+const msg = document.getElementById('auth-message');
+
+function openModal() { modal?.classList.add('open'); }
+function closeModal() { modal?.classList.remove('open'); msg && (msg.textContent = ''); }
+function setTab(name) {
+    tabs.forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
+    formLogin?.classList.toggle('active', name === 'login');
+    formSignup?.classList.toggle('active', name === 'signup');
+}
+loginBtn?.addEventListener('click', openModal);
+modalClose?.addEventListener('click', closeModal);
+modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+tabs.forEach((t) => {
+    t.addEventListener('click', () => setTab(t.dataset.tab));
+});
+setTab('login'); // вкладка по умолчанию
+
+// ===== МАЛЕНЬКИЙ ХЕЛПЕР ДЛЯ ЗАПРОСОВ
 async function apiPost(url, payload) {
     const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // если перейдёшь на cookie-сессии, добавь: credentials: 'include'
         body: JSON.stringify(payload),
+        // если перейдёшь на cookie-сессии: credentials: 'include',
     });
     const text = await res.text();
     let data;
@@ -17,14 +84,10 @@ async function apiPost(url, payload) {
     }
     return data;
 }
-
-// Фейковый хранилище токена (пока — localStorage; позже лучше cookie HttpOnly)
-function saveToken(token) {
-    if (token) localStorage.setItem('auth_token', token);
-}
+function saveToken(token) { if (token) localStorage.setItem('auth_token', token); }
 function clearToken() { localStorage.removeItem('auth_token'); }
 
-// === ФОРМЫ АВТОРИЗАЦИИ С ФЕТЧЕМ К БЭКУ ===
+// ===== ФОРМЫ АВТОРИЗАЦИИ/РЕГИСТРАЦИИ
 formLogin?.addEventListener('submit', async (e) => {
     e.preventDefault();
     msg.textContent = '';
@@ -33,12 +96,10 @@ formLogin?.addEventListener('submit', async (e) => {
     try {
         const data = Object.fromEntries(new FormData(formLogin).entries());
         if (!data.email || !data.password) throw new Error('Заполните e-mail и пароль.');
-        // ОТПРАВКА НА БЭК
         const resp = await apiPost('/api/auth/login', {
             email: String(data.email).trim(),
             password: String(data.password),
         });
-        // ожидаем { token, user: { id, name, email } }
         saveToken(resp.token);
         msg.textContent = '✅ Успешный вход';
         setTimeout(closeModal, 700);
@@ -58,13 +119,11 @@ formSignup?.addEventListener('submit', async (e) => {
         const data = Object.fromEntries(new FormData(formSignup).entries());
         if (!data.name || !data.email || !data.password) throw new Error('Заполните все поля.');
         if (String(data.password).length < 6) throw new Error('Пароль от 6 символов.');
-        // ОТПРАВКА НА БЭК
         const resp = await apiPost('/api/auth/signup', {
             name: String(data.name).trim(),
             email: String(data.email).trim(),
             password: String(data.password),
         });
-        // ожидаем { token, user: { id, name, email } } или { ok: true }
         if (resp.token) saveToken(resp.token);
         msg.textContent = '✅ Аккаунт создан';
         setTimeout(() => setTab('login'), 800);
@@ -73,4 +132,11 @@ formSignup?.addEventListener('submit', async (e) => {
     } finally {
         submitBtn.disabled = false; submitBtn.textContent = 'Создать аккаунт';
     }
+});
+
+// ===== СТАРТ
+document.addEventListener('DOMContentLoaded', () => {
+    revealTiles();
+    revealSectionsOnScroll();
+    bindTilesNavigation();
 });
