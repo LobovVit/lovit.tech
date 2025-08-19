@@ -5,28 +5,26 @@
     --glass-d:rgba(28,28,30,.6);
     --border:rgba(255,255,255,.4);
     --chip-size:48px;
-    --bg-url:url("images/back-light.jpg");
 }
 
-/* если системная тема тёмная — темный фон по умолчанию */
-@media (prefers-color-scheme: dark){
-    :root{ --bg-url:url("images/back-dark.jpg"); }
-}
-html[data-theme="dark"]{ --bg-url:url("images/back-dark.jpg"); }
-
-/* фон — один псевдоэлемент, чтобы корректно менять тему */
+/* ФОН (без CSS-переменной для картинки) */
 body::before{
     content:"";
     position:fixed; inset:0; z-index:-1;
-    background-image:var(--bg-url);
-    background-size:cover;             /* всегда заполняет экран */
+    background-image:url("images/back-light.jpg");   /* светлая по умолчанию */
+    background-size:cover;
     background-position:50% 50%;
     background-repeat:no-repeat;
     will-change:background-position,transform;
     animation:float-bg 60s ease-in-out infinite;
     transform:translateZ(0);
 }
-/* лёгкая дымка для читабельности */
+/* тёмная тема: подменяем картинку напрямую */
+html[data-theme="dark"] body::before{
+    background-image:url("images/back-dark.jpg");
+}
+
+/* лёгкая дымка поверх фоновой картинки для читаемости */
 body::after{
     content:""; position:fixed; inset:0; z-index:-1;
     background:linear-gradient(135deg,var(--bg-start),var(--bg-end));
