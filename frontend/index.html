@@ -1,40 +1,97 @@
-<!DOCTYPE html>
-<html lang="ru">
+<!doctype html>
+<html lang="ru" data-theme="light">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lovit.tech</title>
-    <link rel="stylesheet" href="style.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>lovit.tech</title>
+    <link rel="stylesheet" href="style.css"/>
 </head>
-<body data-theme="light">
+<body>
 <header>
-    <h1>LV</h1>
-    <nav class="tiles">
-        <div class="tile" data-target="advertising">Реклама</div>
-        <div class="tile" data-target="audit">Аудит</div>
-        <div class="tile" data-target="sites">Сайты</div>
-        <div class="tile" data-target="mobileapp">Моб. приложения</div>
+    <h1>lovit.tech</h1>
+
+    <!-- плитки-навигация -->
+    <nav class="tiles" aria-label="Разделы">
+        <button class="tile" data-target="adv" title="Реклама">📣</button>
+        <button class="tile" data-target="audit" title="Аудит">🔍</button>
+        <button class="tile" data-target="sites" title="Сайты">🧩</button>
+        <button class="tile" data-target="mobile" title="Моб. приложения">📱</button>
     </nav>
-    <button id="theme-toggle" aria-label="Переключить тему">🌓</button>
+
+    <div class="header-actions">
+        <button id="theme-toggle" aria-label="Переключить тему">🌗</button>
+        <button id="login-btn" class="btn btn-primary">Войти</button>
+    </div>
 </header>
+
 <main>
-    <section id="advertising" class="section-block">
+    <section id="adv" class="section-block">
         <h2>Реклама</h2>
-        <p>Контент блока «Реклама»…</p>
+        <p>Настройка и оптимизация рекламных кампаний.</p>
     </section>
+
     <section id="audit" class="section-block">
         <h2>Аудит рекламных кампаний</h2>
-        <p>Контент блока «Аудит»…</p>
+        <p>Разбор, метрики, рекомендации и план улучшений.</p>
     </section>
+
     <section id="sites" class="section-block">
-        <h2>Создание разных!!! сайтов</h2>
-        <p>Контент блока «Сайты»…</p>
+        <h2>Создание сайтов</h2>
+        <p>Лендинги, корпоративные сайты, интеграции и анимации.</p>
     </section>
-    <section id="mobileapp" class="section-block">
+
+    <section id="mobile" class="section-block">
         <h2>Мобильные приложения</h2>
-        <p>Контент блока «Моб. Приложения»…</p>
+        <p>Проектирование, разработка и публикация в сторах.</p>
     </section>
 </main>
-<script src="script.js"></script>
+
+<!-- МОДАЛКА АВТОРИЗАЦИИ -->
+<div id="auth-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal__dialog" role="document">
+        <button class="modal__close" id="auth-close" aria-label="Закрыть">✕</button>
+
+        <div class="tabs" role="tablist" aria-label="Авторизация">
+            <button class="tab active" id="tab-login"  role="tab" aria-selected="true"  aria-controls="panel-login">Вход</button>
+            <button class="tab"         id="tab-signup" role="tab" aria-selected="false" aria-controls="panel-signup">Регистрация</button>
+        </div>
+
+        <!-- ВХОД -->
+        <form id="form-login" class="form active" aria-labelledby="tab-login" role="tabpanel" tabindex="0">
+            <label class="field">
+                <span>E-mail</span>
+                <input type="email" name="email" required placeholder="you@example.com" autocomplete="email"/>
+            </label>
+            <label class="field">
+                <span>Пароль</span>
+                <input type="password" name="password" required minlength="6" placeholder="••••••••" autocomplete="current-password"/>
+            </label>
+            <button type="submit" class="btn btn-primary btn-full">Войти</button>
+            <p class="form-hint">Ещё нет аккаунта? <a href="#" id="to-signup">Зарегистрироваться</a></p>
+        </form>
+
+        <!-- РЕГИСТРАЦИЯ -->
+        <form id="form-signup" class="form" aria-labelledby="tab-signup" role="tabpanel" tabindex="0" hidden>
+            <label class="field">
+                <span>Имя</span>
+                <input type="text" name="name" required placeholder="Иван"/>
+            </label>
+            <label class="field">
+                <span>E-mail</span>
+                <input type="email" name="email" required placeholder="you@example.com" autocomplete="email"/>
+            </label>
+            <label class="field">
+                <span>Пароль</span>
+                <input type="password" name="password" required minlength="6" placeholder="Минимум 6 символов" autocomplete="new-password"/>
+            </label>
+            <button type="submit" class="btn btn-primary btn-full">Создать аккаунт</button>
+            <p class="form-hint">Уже есть аккаунт? <a href="#" id="to-login">Войти</a></p>
+        </form>
+
+        <p id="auth-message" class="auth-message" role="status" aria-live="polite"></p>
+    </div>
+</div>
+
+<script src="script.js" defer></script>
 </body>
 </html>
