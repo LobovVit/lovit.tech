@@ -61,8 +61,16 @@ function closeModal() {
     modal?.setAttribute('aria-hidden', 'true');
     if (msg) msg.textContent = '';
 }
+
+// — универсальная установка активной вкладки
 function setTab(name) {
-    tabs.forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
+    // таб-кнопки
+    tabs.forEach((t) => {
+        const isActive = (t.dataset.tab === name) || (t.getAttribute('data-tab-switch') === name);
+        t.classList.toggle('active', isActive);
+        t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+    // формы
     formLogin?.classList.toggle('active', name === 'login');
     formSignup?.classList.toggle('active', name === 'signup');
 }
@@ -75,25 +83,33 @@ loginBtn?.addEventListener('click', (e) => {
 modalClose?.addEventListener('click', closeModal);
 modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-// --- единый обработчик для табов и кнопок ---
-document.addEventListener('click', (e) => {
-    const tabSwitch = e.target.closest('[data-tab-switch]');
-    const openAuth  = e.target.closest('[data-open-auth]');
+// --- совместимо с Safari: вешаем явные обработчики на ВСЕ элементы data-tab-switch ---
+document.querySelectorAll('[data-tab-switch]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+        e.preventDefault();
+        openModal();
+        const name = el.getAttribute('data-tab-switch') || 'login';
+        setTab(name);
+    });
+});
 
+// На всякий случай добавим и делегирование (если элементы динамически появятся)
+document.addEventListener('click', (e) => {
+    const raw = e.target;
+    const target = raw && raw.nodeType === Node.TEXT_NODE ? raw.parentElement : raw;
+    if (!(target instanceof Element)) return;
+
+    const tabSwitch = target.closest('[data-tab-switch]');
     if (tabSwitch) {
         e.preventDefault();
         openModal();
         setTab(tabSwitch.getAttribute('data-tab-switch') || 'login');
-    } else if (openAuth) {
-        e.preventDefault();
-        openModal();
-        setTab(openAuth.getAttribute('data-tab') || 'login');
     }
 });
 
 // ===== API helper (заглушка)
 async function apiPost(url, payload) {
-    // пока бэкенд не готов — просто эмулируем успешный ответ
+    // эмуляция запроса
     await new Promise(r => setTimeout(r, 500));
     return { ok: true, token: 'demo-token' };
 }
@@ -145,5 +161,5 @@ document.addEventListener('DOMContentLoaded', () => {
     revealTiles();
     revealSectionsOnScroll();
     bindTilesNavigation();
-    setTab('login'); // по умолчанию — вкладка входа
+    setTab('login'); // по умолчанию показываем вкладку входа
 });

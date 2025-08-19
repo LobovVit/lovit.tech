@@ -2,92 +2,109 @@
 <html lang="ru" data-theme="light">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>LOVIT</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>LV</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <header>
-    <h1>LOVIT</h1>
+    <h1>LV</h1>
 
-    <nav class="tiles">
-        <button class="tile" data-target="section-ads" title="Реклама">📣</button>
-        <button class="tile" data-target="section-audit" title="Аудит">🧭</button>
-        <button class="tile" data-target="section-sites" title="Сайты">🧩</button>
-        <button class="tile" data-target="section-apps" title="Мобильные">📱</button>
-    </nav>
+    <div class="tiles" aria-label="Навигация по разделам">
+        <div class="tile" data-target="adv">📣</div>
+        <div class="tile" data-target="audit">🧪</div>
+        <div class="tile" data-target="sites">🧩</div>
+        <div class="tile" data-target="mobile">📱</div>
+    </div>
 
     <div class="header-actions">
         <button id="theme-toggle" title="Переключить тему">🌓</button>
-        <button id="login-btn" class="btn btn-primary">Войти</button>
+        <button id="login-btn" class="btn btn-primary" data-open-auth data-tab="login">Войти</button>
     </div>
 </header>
 
 <main>
-    <section id="section-ads"   class="section-block">
+    <section id="adv" class="section-block">
         <h2>Реклама</h2>
-        <p>Настраиваем и оптимизируем рекламные кампании.</p>
-        <button class="btn btn-primary">Подробнее</button>
+        <p>Запуск и оптимизация кампаний.</p>
     </section>
 
-    <section id="section-audit" class="section-block">
+    <section id="audit" class="section-block">
         <h2>Аудит рекламных кампаний</h2>
-        <p>Проводим аудит кампаний и помогаем повышать ROI.</p>
-        <button class="btn btn-primary">Заказать аудит</button>
+        <p>Разбор и рекомендации.</p>
     </section>
 
-    <section id="section-sites" class="section-block">
-        <h2>Создание сайтов</h2>
-        <p>Проектирование, дизайн, разработка и поддержка.</p>
-        <button class="btn btn-primary">Оставить заявку</button>
+    <section id="sites" class="section-block">
+        <h2>Сайты</h2>
+        <p>Продуманные веб-продукты под задачи.</p>
     </section>
 
-    <section id="section-apps"  class="section-block">
+    <section id="mobile" class="section-block">
         <h2>Мобильные приложения</h2>
-        <p>iOS/Android — нативно или на кросс-платформе.</p>
-        <button class="btn btn-primary">Обсудить проект</button>
+        <p>iOS/Android — дизайн, разработка, публикация.</p>
     </section>
 </main>
 
-<!-- Модалка авторизации/регистрации -->
-<div id="auth-modal" class="modal" aria-hidden="true">
-    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
-        <button id="auth-close" class="modal__close" aria-label="Закрыть">✖</button>
-        <h3 id="auth-title" style="margin:0 0 .5rem;">Аккаунт</h3>
+<!-- Модалка авторизации -->
+<div id="auth-modal" class="modal" aria-hidden="true" aria-modal="true" role="dialog">
+    <div class="modal__dialog">
+        <button id="auth-close" class="modal__close" aria-label="Закрыть">✕</button>
+        <h3 style="margin:0 0 .5rem;">Аккаунт</h3>
 
-        <div class="tabs">
-            <button class="tab" data-tab="login"  type="button">Вход</button>
-            <button class="tab" data-tab="signup" type="button">Регистрация</button>
+        <div class="tabs" role="tablist">
+            <button
+                    class="tab active"
+                    role="tab"
+                    aria-selected="true"
+                    data-tab="login"
+                    data-tab-switch="login"
+            >Вход</button>
+
+            <button
+                    class="tab"
+                    role="tab"
+                    aria-selected="false"
+                    data-tab="signup"
+                    data-tab-switch="signup"
+            >Регистрация</button>
         </div>
 
-        <form id="form-login" class="form" autocomplete="on">
+        <!-- Форма входа -->
+        <form id="form-login" class="form active" novalidate>
             <div class="field">
-                <label>E-mail</label>
-                <input type="email" name="email" required />
+                <label for="login-email">E-mail</label>
+                <input id="login-email" name="email" type="email" placeholder="you@example.com" required />
             </div>
             <div class="field">
-                <label>Пароль</label>
-                <input type="password" name="password" required />
+                <label for="login-pass">Пароль</label>
+                <input id="login-pass" name="password" type="password" placeholder="••••••••" required />
             </div>
-            <button type="submit" class="btn btn-primary btn-full">Войти</button>
-            <p class="form-hint">Нет аккаунта? <a href="#" data-tab-switch="signup">Зарегистрируйтесь</a></p>
+            <button class="btn btn-primary btn-full" type="submit">Войти</button>
+            <p class="form-hint">
+                Нет аккаунта?
+                <a href="#" data-tab-switch="signup">Создать</a>
+            </p>
         </form>
 
-        <form id="form-signup" class="form" autocomplete="on">
+        <!-- Форма регистрации -->
+        <form id="form-signup" class="form" novalidate>
             <div class="field">
-                <label>Имя</label>
-                <input type="text" name="name" required />
+                <label for="su-name">Имя</label>
+                <input id="su-name" name="name" type="text" placeholder="Иван Иванов" required />
             </div>
             <div class="field">
-                <label>E-mail</label>
-                <input type="email" name="email" required />
+                <label for="su-email">E-mail</label>
+                <input id="su-email" name="email" type="email" placeholder="you@example.com" required />
             </div>
             <div class="field">
-                <label>Пароль</label>
-                <input type="password" name="password" minlength="6" required />
+                <label for="su-pass">Пароль</label>
+                <input id="su-pass" name="password" type="password" placeholder="минимум 6 символов" required />
             </div>
-            <button type="submit" class="btn btn-primary btn-full">Создать аккаунт</button>
-            <p class="form-hint">Уже есть аккаунт? <a href="#" data-tab-switch="login">Войти</a></p>
+            <button class="btn btn-primary btn-full" type="submit">Создать аккаунт</button>
+            <p class="form-hint">
+                Уже есть аккаунт?
+                <a href="#" data-tab-switch="login">Войти</a>
+            </p>
         </form>
 
         <div id="auth-message" class="auth-message"></div>
