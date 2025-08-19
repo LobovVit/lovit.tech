@@ -1,35 +1,59 @@
-// ===== ТЕМА / ЛОГО
-const themeToggle = document.getElementById('theme-toggle');
-const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-const storedTheme = localStorage.getItem('theme');
+// ---------- ТЕМА / ЛОГО / ПРЕДЗАГРУЗКА ФОНОВ ----------
+const themeToggle  = document.getElementById('theme-toggle');
+const prefersDark  = window.matchMedia('(prefers-color-scheme: dark)');
+const storedTheme  = localStorage.getItem('theme');
+
+// предзагрузка фоновых изображений (убирает задержки на смене темы)
+['images/back-light.jpg', 'images/back-dark.jpg'].forEach(src => {
+    const img = new Image();
+    img.src = src;
+});
+
+// небольшой «бамп» для Safari, чтобы он обновлял body::before
+let bumpFlip = false;
+function bumpBackgroundForSafari() {
+    bumpFlip = !bumpFlip;
+    document.documentElement.setAttribute('data-bg-bump', bumpFlip ? '1' : '0');
+}
 
 function setTheme(mode) {
     const isDark = mode === 'dark';
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    const html = document.documentElement;
+    html.setAttribute('data-theme', isDark ? 'dark' : 'light');
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
 
     const logo = document.getElementById('logo');
     if (logo) {
-        logo.src = isDark ? 'images/logo-dark.png' : 'images/logo-light.png';
+        // меняем src и достраиваем query для обхода агрессивного кеша
+        const url = isDark ? 'images/logo-dark.png' : 'images/logo-light.png';
+        logo.src = `${url}?v=1`;
     }
+
+    bumpBackgroundForSafari();
 }
+
+// начальная тема
 setTheme(storedTheme || (prefersDark.matches ? 'dark' : 'light'));
+
+// если пользователь не фиксировал тему — подстраиваемся под системную
 prefersDark.addEventListener('change', (e) => {
     if (!localStorage.getItem('theme')) setTheme(e.matches ? 'dark' : 'light');
 });
+
+// ручное переключение темы
 themeToggle?.addEventListener('click', () => {
     const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
     setTheme(cur === 'dark' ? 'light' : 'dark');
 });
 
-// ===== ВХОДНАЯ АНИМАЦИЯ ЧИПОВ
+// ---------- ВХОДНАЯ АНИМАЦИЯ КНОПОК В ХЕДЕРЕ ----------
 window.addEventListener('load', () => {
     document.querySelectorAll('.header-actions .chip').forEach((chip, i) => {
         setTimeout(() => chip.classList.add('show'), 80 + i * 80);
     });
 });
 
-// ===== ПЛИТКИ => СКРОЛЛ К СЕКЦИЯМ
+// ---------- КЛИК ПО ПЛИТКАМ: СКРОЛЛ К СЕКЦИЯМ ----------
 function bindTilesNavigation() {
     document.querySelectorAll('.tile[data-target]').forEach(tile => {
         tile.addEventListener('click', () => {
@@ -40,7 +64,7 @@ function bindTilesNavigation() {
     });
 }
 
-// ===== РАЗВОРОТ СЕКЦИЙ ПРИ ПРОКРУТКЕ
+// ---------- ПОКАЗ СЕКЦИЙ ПРИ ПРОКРУТКЕ ----------
 function revealSections() {
     const io = new IntersectionObserver((entries) => {
         entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
@@ -48,7 +72,7 @@ function revealSections() {
     document.querySelectorAll('.section-block').forEach(s => io.observe(s));
 }
 
-// ===== МОДАЛКА АВТОРИЗАЦИИ
+// ---------- МОДАЛКА АВТОРИЗАЦИИ ----------
 const loginBtn   = document.getElementById('login-btn');
 const modal      = document.getElementById('auth-modal');
 const modalClose = document.getElementById('auth-close');
@@ -62,11 +86,11 @@ function closeModal(){ modal?.classList.remove('open'); modal?.setAttribute('ari
 
 function setTab(name){
     tabs.forEach(t => {
-        const active = (t.getAttribute('data-tab') === name) || (t.getAttribute('data-tab-switch') === name);
+        const active = t.getAttribute('data-tab') === name;
         t.classList.toggle('active', active);
         t.setAttribute('aria-selected', active ? 'true' : 'false');
     });
-    formLogin?.classList.toggle('active', name === 'login');
+    formLogin?.classList.toggle('active',  name === 'login');
     formSignup?.classList.toggle('active', name === 'signup');
 }
 
@@ -74,15 +98,16 @@ loginBtn?.addEventListener('click', (e)=>{ e.preventDefault(); openModal(); setT
 modalClose?.addEventListener('click', closeModal);
 modal?.addEventListener('click', (e)=>{ if (e.target === modal) closeModal(); });
 
-// Safari-friendly: явные обработчики на элементы с data-tab-switch
+// Явные обработчики для Safari на ссылках с data-tab-switch
 document.querySelectorAll('[data-tab-switch]').forEach(el=>{
     el.addEventListener('click', (e)=>{
         e.preventDefault();
         openModal();
         setTab(el.getAttribute('data-tab-switch') || 'login');
-    });
+    }, { passive:false });
 });
-// Фолбэк делегированием (на случай динамики)
+
+// Делегирование (если кнопки/ссылки будут добавляться динамически)
 document.addEventListener('click', (e)=>{
     const raw = e.target;
     const target = raw && raw.nodeType === Node.TEXT_NODE ? raw.parentElement : raw;
@@ -95,7 +120,7 @@ document.addEventListener('click', (e)=>{
     }
 });
 
-// ===== Формы (заглушки)
+// Заглушки форм
 async function apiPost(){ await new Promise(r=>setTimeout(r,500)); return {ok:true, token:'demo'}; }
 function saveToken(t){ if(t) localStorage.setItem('auth_token', t); }
 
@@ -126,7 +151,7 @@ formSignup?.addEventListener('submit', async (e)=>{
     finally{ btn.disabled=false; btn.textContent='Создать аккаунт'; }
 });
 
-// старт
+// Старт
 document.addEventListener('DOMContentLoaded', ()=>{
     bindTilesNavigation();
     revealSections();
