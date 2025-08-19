@@ -2,75 +2,69 @@
 <html lang="ru" data-theme="light">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>LV</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>lovit.tech</title>
+    <link rel="icon" href="images/favicon.ico" />
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+<!-- Header -->
 <header>
-    <img id="logo" src="images/logo-light.png" alt="LV" class="logo">
-
-    <div class="tiles" aria-label="Навигация по разделам">
-        <div class="tile" data-target="adv">📣</div>
-        <div class="tile" data-target="audit">🧪</div>
-        <div class="tile" data-target="sites">🧩</div>
-        <div class="tile" data-target="mobile">📱</div>
+    <div class="brand">
+        <img id="logo" class="logo" src="images/logo-light.png" alt="LV logo" />
     </div>
 
     <div class="header-actions">
-        <button id="theme-toggle" title="Переключить тему">🌓</button>
-        <button id="login-btn" class="btn btn-primary" data-open-auth data-tab="login">Войти</button>
+        <!-- 4 плитки -->
+        <button class="chip tile" data-target="ads"      aria-label="Реклама">📣</button>
+        <button class="chip tile" data-target="audit"    aria-label="Аудит">🧪</button>
+        <button class="chip tile" data-target="sites"    aria-label="Сайты">🧩</button>
+        <button class="chip tile" data-target="mobile"   aria-label="Мобильные">📱</button>
+
+        <!-- переключатель темы -->
+        <button id="theme-toggle" class="chip" title="Тема">🌗</button>
+
+        <!-- Войти как чип широкого типа -->
+        <button id="login-btn" class="chip chip--wide">Войти</button>
     </div>
 </header>
 
+<!-- Контент -->
 <main>
-    <section id="adv" class="section-block">
+    <section id="ads" class="section-block">
         <h2>Реклама</h2>
-        <p>Запуск и оптимизация кампаний.</p>
+        <p>Контент блока «Реклама»</p>
     </section>
 
     <section id="audit" class="section-block">
         <h2>Аудит рекламных кампаний</h2>
-        <p>Разбор и рекомендации.</p>
+        <p>Контент блока «Аудит»</p>
     </section>
 
     <section id="sites" class="section-block">
         <h2>Сайты</h2>
-        <p>Продуманные веб-продукты под задачи.</p>
+        <p>Контент блока «Сайты»</p>
     </section>
 
     <section id="mobile" class="section-block">
         <h2>Мобильные приложения</h2>
-        <p>iOS/Android — дизайн, разработка, публикация.</p>
+        <p>Контент блока «Мобильные приложения»</p>
     </section>
 </main>
 
 <!-- Модалка авторизации -->
-<div id="auth-modal" class="modal" aria-hidden="true" aria-modal="true" role="dialog">
-    <div class="modal__dialog">
+<div id="auth-modal" class="modal" aria-hidden="true">
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
         <button id="auth-close" class="modal__close" aria-label="Закрыть">✕</button>
-        <h3 style="margin:0 0 .5rem;">Личный кабинет</h3>
+        <h3 id="auth-title">Добро пожаловать</h3>
 
         <div class="tabs" role="tablist">
-            <button
-                    class="tab active"
-                    role="tab"
-                    aria-selected="true"
-                    data-tab="login"
-                    data-tab-switch="login"
-            >Вход</button>
-
-            <button
-                    class="tab"
-                    role="tab"
-                    aria-selected="false"
-                    data-tab="signup"
-                    data-tab-switch="signup"
-            >Регистрация</button>
+            <button class="tab active" data-tab="login"  data-tab-switch="login"  role="tab" aria-selected="true">Вход</button>
+            <button class="tab"         data-tab="signup" data-tab-switch="signup" role="tab" aria-selected="false">Регистрация</button>
         </div>
 
-        <!-- Форма входа -->
-        <form id="form-login" class="form active" novalidate>
+        <!-- Вход -->
+        <form id="form-login" class="form active">
             <div class="field">
                 <label for="login-email">E-mail</label>
                 <input id="login-email" name="email" type="email" placeholder="you@example.com" required />
@@ -80,37 +74,33 @@
                 <input id="login-pass" name="password" type="password" placeholder="••••••••" required />
             </div>
             <button class="btn btn-primary btn-full" type="submit">Войти</button>
-            <p class="form-hint">
-                Нет аккаунта?
-                <a href="#" data-tab-switch="signup">Создать</a>
-            </p>
         </form>
 
-        <!-- Форма регистрации -->
-        <form id="form-signup" class="form" novalidate>
+        <!-- Регистрация -->
+        <form id="form-signup" class="form">
             <div class="field">
-                <label for="su-name">Имя</label>
-                <input id="su-name" name="name" type="text" placeholder="Иван Иванов" required />
+                <label for="signup-name">Имя</label>
+                <input id="signup-name" name="name" type="text" placeholder="Ваше имя" required />
             </div>
             <div class="field">
-                <label for="su-email">E-mail</label>
-                <input id="su-email" name="email" type="email" placeholder="you@example.com" required />
+                <label for="signup-email">E-mail</label>
+                <input id="signup-email" name="email" type="email" placeholder="you@example.com" required />
             </div>
             <div class="field">
-                <label for="su-pass">Пароль</label>
-                <input id="su-pass" name="password" type="password" placeholder="минимум 6 символов" required />
+                <label for="signup-pass">Пароль</label>
+                <input id="signup-pass" name="password" type="password" placeholder="минимум 6 символов" required />
             </div>
             <button class="btn btn-primary btn-full" type="submit">Создать аккаунт</button>
-            <p class="form-hint">
-                Уже есть аккаунт?
-                <a href="#" data-tab-switch="login">Войти</a>
-            </p>
         </form>
 
-        <div id="auth-message" class="auth-message"></div>
+        <div id="auth-message" class="auth-message" role="status" aria-live="polite"></div>
+        <p class="form-hint">
+            Нужен аккаунт? <a href="#" data-tab-switch="signup">Зарегистрироваться</a> ·
+            Уже есть аккаунт? <a href="#" data-tab-switch="login">Войти</a>
+        </p>
     </div>
 </div>
 
-<script src="script.js" defer></script>
+<script src="script.js"></script>
 </body>
 </html>
