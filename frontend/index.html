@@ -1,101 +1,130 @@
 <!DOCTYPE html>
 <html lang="ru" data-theme="light">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>lovit.tech</title>
+    <title>Digital-studia LV</title>
+    <link rel="preload" as="image" href="images/back-light.jpg">
+    <link rel="preload" as="image" href="images/back-dark.jpg">
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<!-- ФОН -->
+<!-- Фон -->
 <div id="bg" aria-hidden="true"></div>
 
-<!-- HEADER -->
+<!-- Шапка -->
 <header class="site-header" style="--header-h:64px">
     <div class="header-left">
-        <a class="logo" href="#top" aria-label="На главную">
-            <img id="logoImg" src="images/logo-light.png" alt="LV" />
+        <a class="logo" href="#" aria-label="Digital-studia LV">
+            <img id="logoImg" src="images/logo-light.png" alt="LV Logo" />
         </a>
         <div class="brand">
-            <span class="brand-text" aria-label="Digital-studia LV">Digital-studia LV</span>
+            <span class="brand-text">Digital-studia LV</span>
         </div>
     </div>
 
     <nav class="header-actions">
-        <a class="pill pill-l" data-goto="adv"><span class="pill-label">Реклама</span></a>
-        <a class="pill pill-l" data-goto="audit"><span class="pill-label">Аудит</span></a>
-        <a class="pill pill-l" data-goto="sites"><span class="pill-label">Сайты</span></a>
-        <a class="pill pill-l" data-goto="mobile"><span class="pill-label">Мобильные</span></a>
+        <!-- Плитки-ссылки (справа), единый стиль -->
+        <button class="pill pill-l" data-goto="ads">
+            <span class="pill-icon">📣</span><span class="pill-label">Реклама</span>
+        </button>
+        <button class="pill pill-l" data-goto="audit">
+            <span class="pill-icon">🧭</span><span class="pill-label">Аудит</span>
+        </button>
+        <button class="pill pill-l" data-goto="sites">
+            <span class="pill-icon">🖥️</span><span class="pill-label">Сайты</span>
+        </button>
+        <button class="pill pill-l" data-goto="mobile">
+            <span class="pill-icon">📱</span><span class="pill-label">Мобильные</span>
+        </button>
 
         <div class="spacer" aria-hidden="true"></div>
 
-        <!-- Иконки мессенджеров -->
-        <a class="pill pill-icon" href="https://t.me/your_telegram" target="_blank" rel="noopener" aria-label="Telegram">
-            <span class="icon social telegram"></span>
+        <!-- Соц-иконки тем же стилем -->
+        <a class="pill" href="https://t.me/your_nick" target="_blank" rel="noopener">
+            <span class="icon telegram" aria-hidden="true"></span>
+<!--            <span class="pill-label">Telegram</span>-->
         </a>
-        <a class="pill pill-icon" href="https://wa.me/71234567890" target="_blank" rel="noopener" aria-label="WhatsApp">
-            <span class="icon social whatsapp"></span>
+        <a class="pill" href="https://wa.me/79990000000" target="_blank" rel="noopener">
+            <span class="icon whatsapp" aria-hidden="true"></span>
+<!--            <span class="pill-label">WhatsApp</span>-->
         </a>
 
-        <button id="themeToggle" class="pill pill-icon" type="button" aria-label="Сменить тему">
-            <span class="icon theme"></span>
+        <button id="themeToggle" class="pill" aria-label="Сменить тему">
+            <span class="icon theme" aria-hidden="true"></span>
         </button>
-
-        <button id="openAuth" class="pill pill-icon" type="button" aria-label="Войти">
-            <span class="icon user"></span>
+        <button id="openAuth" class="pill" aria-haspopup="dialog">
+            <span class="icon user" aria-hidden="true"></span>
+            <span class="pill-label">Войти</span>
         </button>
     </nav>
 </header>
 
-<!-- КОНТЕНТ -->
-<main class="content" id="top">
-    <!-- Плитки (падают под шапку, не перекрывая её) -->
-    <section class="tiles">
-        <a class="tile" style="--i:0" data-goto="adv"><h3>Реклама</h3><p>Запустим/масштабируем</p></a>
-        <a class="tile" style="--i:1" data-goto="audit"><h3>Аудит</h3><p>Проверим гипотезы</p></a>
-        <a class="tile" style="--i:2" data-goto="sites"><h3>Сайты</h3><p>Лендинги и витрины</p></a>
-        <a class="tile" style="--i:3" data-goto="mobile"><h3>Мобильные</h3><p>iOS/Android</p></a>
+<!-- Контент -->
+<main class="content">
+    <!-- Плитки (появление по очереди) -->
+    <section class="tiles" aria-label="Услуги">
+        <a class="tile" style="--i:0" href="#ads"><h3>Реклама</h3><p>Запускаем и оптимизируем кампании.</p></a>
+        <a class="tile" style="--i:1" href="#audit"><h3>Аудит</h3><p>Найдём точки роста и сэкономим бюджет.</p></a>
+        <a class="tile" style="--i:2" href="#sites"><h3>Сайты</h3><p>Делаем современные лендинги и многостраничники.</p></a>
+        <a class="tile" style="--i:3" href="#mobile"><h3>Мобильные</h3><p>Прототипы и MVP под iOS/Android.</p></a>
     </section>
 
-    <section id="adv"   class="block"><h2>Реклама</h2><p>Контент блока «Реклама»…</p></section>
-    <section id="audit" class="block"><h2>Аудит</h2><p>Контент блока «Аудит»…</p></section>
-    <section id="sites" class="block"><h2>Сайты</h2><p>Контент блока «Сайты»…</p></section>
-    <section id="mobile"class="block"><h2>Мобильные</h2><p>Контент блока «Мобильные»…</p></section>
+    <!-- Блоки -->
+    <section id="ads"    class="block"><h2>Реклама</h2><p>Детали про рекламные кампании…</p></section>
+    <section id="audit"  class="block"><h2>Аудит</h2><p>Как мы проводим аудит…</p></section>
+    <section id="sites"  class="block"><h2>Сайты</h2><p>Подход к разработке…</p></section>
+    <section id="mobile" class="block"><h2>Мобильные приложения</h2><p>Сценарии, стек и т.д…</p></section>
+
+    <!-- SEO блок (контент наполняется позже) -->
+    <section class="seo-text" aria-label="SEO текст">
+        <div class="seo-container">
+            <h2>Digital-studia LV — разработка и маркетинг</h2>
+            <p>Добавьте сюда SEO-текст…</p>
+        </div>
+    </section>
 </main>
 
-<!-- МОДАЛКА -->
-<div id="authModal" class="modal" aria-hidden="true">
+<!-- Модалка авторизации -->
+<div id="authModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <div class="modal__backdrop" data-close></div>
-    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="modal__dialog">
         <div class="modal__header">
-            <h3 id="authTitle">Аккаунт</h3>
-            <button class="pill pill-icon" type="button" data-close aria-label="Закрыть">
-                <span class="icon close"></span>
+            <h3 id="authTitle" class="modal__title">Аккаунт</h3>
+            <button class="pill" data-close aria-label="Закрыть">
+                <span class="icon close" aria-hidden="true"></span>
             </button>
         </div>
 
         <div class="tabs" role="tablist">
-            <button class="tab" data-tab="login" role="tab" aria-selected="true">Вход</button>
-            <button class="tab" data-tab="signup" role="tab" aria-selected="false">Регистрация</button>
+            <button class="tab" role="tab" aria-selected="true" data-tab="login">Вход</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="register">Регистрация</button>
         </div>
 
         <div class="tabpanes">
-            <form id="pane-login"  class="pane" autocomplete="on">
-                <label> E-mail <input type="email" autocomplete="email" required></label>
-                <label> Пароль <input type="password" autocomplete="current-password" required></label>
+            <form id="pane-login" class="pane active" role="tabpanel">
+                <label> Email
+                    <input type="email" placeholder="you@example.com" autocomplete="email" />
+                </label>
+                <label> Пароль
+                    <input type="password" placeholder="••••••••" autocomplete="current-password" />
+                </label>
                 <button class="pill wide" type="submit">Войти</button>
             </form>
 
-            <form id="pane-signup" class="pane" autocomplete="on">
-                <label> E-mail <input type="email" required></label>
-                <label> Пароль <input type="password" required></label>
-                <label> Имя <input type="text" autocomplete="name"></label>
+            <form id="pane-register" class="pane" role="tabpanel">
+                <label> Email
+                    <input type="email" placeholder="you@example.com" autocomplete="email" />
+                </label>
+                <label> Пароль
+                    <input type="password" placeholder="Придумайте пароль" autocomplete="new-password" />
+                </label>
                 <button class="pill wide" type="submit">Создать аккаунт</button>
             </form>
         </div>
     </div>
 </div>
 
-<script src="script.js"></script>
+<script src="script.js" defer></script>
 </body>
 </html>

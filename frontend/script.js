@@ -1,26 +1,27 @@
 (function () {
-    const html       = document.documentElement;
-    const bg         = document.getElementById('bg');
-    const logoImg    = document.getElementById('logoImg');
-    const themeBtn   = document.getElementById('themeToggle');
-    const openAuth   = document.getElementById('openAuth');
-    const modal      = document.getElementById('authModal');
-    const closeEls   = modal.querySelectorAll('[data-close]');
-    const tabs       = modal.querySelectorAll('.tab');
-    const panes      = modal.querySelectorAll('.pane');
+    const html     = document.documentElement;
+    const bg       = document.getElementById('bg');
+    const logoImg  = document.getElementById('logoImg');
+    const themeBtn = document.getElementById('themeToggle');
 
-    /* ---------- ТЕМА ---------- */
-    const media   = window.matchMedia('(prefers-color-scheme: dark)');
-    const saved   = localStorage.getItem('theme');
+    const openAuth = document.getElementById('openAuth');
+    const modal    = document.getElementById('authModal');
+
+    const closeEls = modal.querySelectorAll('[data-close]');
+    const tabs     = modal.querySelectorAll('.tab');
+    const panes    = modal.querySelectorAll('.pane');
+
+    /* ---------- Тема ---------- */
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const saved = localStorage.getItem('theme');
 
     function applyTheme(theme) {
         html.setAttribute('data-theme', theme);
         logoImg.src = theme === 'dark' ? 'images/logo-dark.png' : 'images/logo-light.png';
-        // перезапуск анимации фона после смены темы (Safari-friendly)
+
+        // Перезапуск анимации фона (важно для Safari)
         bg.style.animation = 'none';
-        // следующий кадр
         requestAnimationFrame(() => {
-            // ещё один — чтобы точно применилось
             requestAnimationFrame(() => {
                 bg.style.animation = '';
             });
@@ -34,7 +35,9 @@
     }
 
     media.addEventListener?.('change', e => {
-        if (!localStorage.getItem('theme')) applyTheme(e.matches ? 'dark' : 'light');
+        if (!localStorage.getItem('theme')) {
+            applyTheme(e.matches ? 'dark' : 'light');
+        }
     });
 
     themeBtn.addEventListener('click', () => {
@@ -43,14 +46,22 @@
         applyTheme(next);
     });
 
-    /* ---------- Переходы к секциям ---------- */
-    function goTo(id){ document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'}); }
-    document.querySelectorAll('[data-goto]').forEach(el => el.addEventListener('click', () => goTo(el.getAttribute('data-goto'))));
+    /* ---------- Навигация к блокам ---------- */
+    function goTo(id) {
+        document.getElementById(id)?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+    document.querySelectorAll('[data-goto]')
+        .forEach(el => el.addEventListener('click', () => goTo(el.getAttribute('data-goto'))));
 
     /* ---------- Модалка ---------- */
     openAuth.addEventListener('click', () => modal.classList.add('open'));
     closeEls.forEach(el => el.addEventListener('click', () => modal.classList.remove('open')));
-    modal.addEventListener('click', e => { if (e.target === modal.querySelector('.modal__backdrop')) modal.classList.remove('open'); });
+    modal.addEventListener('click', e => {
+        if (e.target === modal.querySelector('.modal__backdrop')) modal.classList.remove('open');
+    });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('open'); });
 
     /* ---------- Вкладки (надёжно в Safari) ---------- */

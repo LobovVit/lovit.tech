@@ -5,23 +5,22 @@
 
     --surface:rgba(255,255,255,.72);
     --surface-strong:rgba(255,255,255,.9);
-    --text:#111;
-    --muted:#666;
+    --text:#101114;
+    --muted:#666b73;
     --accent:#007aff;
     --shadow:0 10px 30px rgba(0,0,0,.12);
     --backdrop-blur:blur(12px);
 }
 [data-theme="dark"]{
-    /* светлее подложка в тёмной теме */
-    --surface: rgba(44,44,46,.70);
-    --surface-strong: rgba(58,58,60,.85);
+    --surface: rgba(44,44,46,.72);
+    --surface-strong: rgba(58,58,60,.86);
     --text:#f2f2f7;
     --muted:#a1a1a6;
     --accent:#0a84ff;
     --shadow:0 10px 30px rgba(0,0,0,.35);
 }
 
-/* базовая типографика — единый стек */
+/* База */
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -30,17 +29,17 @@ body{
     color:var(--text);
 }
 
-/* фон */
+/* Фон */
 #bg{
     position:fixed;inset:0;z-index:-1;
     background-image:var(--bg-light);
     background-size:cover;background-repeat:no-repeat;background-position:50% 50%;
     will-change:background-position;
-    animation:float-bg 40s ease-in-out infinite;
+    animation:float-bg 42s ease-in-out infinite;
 }
 [data-theme="dark"] #bg{ background-image:var(--bg-dark) }
 
-/* круговое мягкое движение */
+/* Мягкое круговое движение */
 @keyframes float-bg{
     0%{background-position:50% 50%}
     5%{background-position:51% 49%}
@@ -63,7 +62,7 @@ body{
     90%,95%,100%{background-position:50% 50%}
 }
 
-/* шапка */
+/* Шапка */
 .site-header{
     position:sticky;top:0;z-index:1000;
     display:flex;align-items:center;justify-content:space-between;gap:16px;
@@ -74,10 +73,10 @@ body{
 }
 .header-left{display:flex;align-items:center;gap:12px}
 
-/* логотип — сохраняем пропорции */
+/* Лого (пропорционально) */
 .logo img{display:block;height:36px;width:auto;max-width:44px}
 
-/* бренд с анимацией «въезда» + «печати» */
+/* Бренд: въезд + «печать» */
 .brand{overflow:hidden;max-width:100%}
 .brand-text{
     display:inline-block;white-space:nowrap;
@@ -90,7 +89,7 @@ body{
 
 .header-actions{display:flex;align-items:center;gap:10px;margin-left:auto}
 
-/* единый стиль кнопок */
+/* Единый стиль «пилюль» */
 .pill{
     height:36px;padding:0 14px;
     border-radius:999px;border:1px solid rgba(0,0,0,.10);
@@ -105,7 +104,7 @@ body{
 .pill-icon{padding:0 12px}
 .pill .pill-label{margin-left:4px}
 
-/* SVG-иконки через mask (цвет берут из currentColor) */
+/* SVG-иконки (через mask) */
 .icon{width:18px;height:18px;display:inline-block;background:currentColor}
 .icon.theme   {mask:url("icons/theme.svg") no-repeat center/contain;-webkit-mask:url("icons/theme.svg") no-repeat center/contain}
 .icon.user    {mask:url("icons/user.svg") no-repeat center/contain;-webkit-mask:url("icons/user.svg") no-repeat center/contain}
@@ -113,12 +112,17 @@ body{
 .icon.telegram{mask:url("icons/telegram.svg") no-repeat center/contain;-webkit-mask:url("icons/telegram.svg") no-repeat center/contain}
 .icon.whatsapp{mask:url("icons/whatsapp.svg") no-repeat center/contain;-webkit-mask:url("icons/whatsapp.svg") no-repeat center/contain}
 
-/* разделитель-пустышка */
+/* Разделитель-пробел */
 .spacer{width:56px;flex:0 0 56px}
 
-/* контент и плитки */
-.content{padding:calc(var(--header-h) + 16px) clamp(18px,3vw,28px) clamp(18px,3vw,28px)}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin:18px 0 26px}
+/* Контент и плитки */
+.content{
+    padding:calc(var(--header-h) + 16px) clamp(18px,3vw,28px) clamp(18px,3vw,28px);
+}
+.tiles{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:18px;margin:18px 0 26px;
+}
 .tile{
     display:block;padding:18px 18px 20px;background:var(--surface);
     border:1px solid rgba(0,0,0,.08);border-radius:16px;box-shadow:var(--shadow);
@@ -127,18 +131,19 @@ body{
     animation:tile-drop .5s ease forwards;animation-delay:calc(var(--i) * .08s + .12s);
     will-change:transform,opacity;
 }
+.tile:hover{transform:translateY(-2px)}
 @keyframes tile-drop{to{opacity:1;transform:translateY(0)}}
 .tile h3{margin:0 0 6px;font-size:18px}
 .tile p{margin:0;color:var(--muted)}
 
-/* блоки */
+/* Блоки */
 .block{
     background:var(--surface);border:1px solid rgba(0,0,0,.08);border-radius:16px;
     padding:20px;margin:22px 0;box-shadow:var(--shadow);
     scroll-margin-top:calc(var(--header-h) + 12px);
 }
 
-/* модальное окно */
+/* Модалка */
 .modal{position:fixed;inset:0;display:none}
 .modal.open{display:block}
 .modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px)}
@@ -158,12 +163,10 @@ label{display:grid;gap:6px;font-size:14px}
 input{height:40px;border-radius:10px;border:1px solid rgba(0,0,0,.15);background:var(--surface);color:var(--text);padding:0 12px}
 .pill.wide{width:100%}
 
-/* мобильный */
+/* Мобильный */
 @media (max-width:720px){
     .logo img{height:32px}
-    .pill-l {
-        display: none;
-    }
+    .pill-l{display:none}
 }
 @media (max-width:520px){
     .brand{display:none}
@@ -173,3 +176,33 @@ input{height:40px;border-radius:10px;border:1px solid rgba(0,0,0,.15);background
     .pill-icon{padding:0 10px}
     .tiles{grid-template-columns:1fr;gap:14px}
 }
+
+/* SEO блок */
+.seo-text{
+    width:min(1100px,92vw);
+    margin: clamp(28px,5vw,48px) auto;
+    padding: clamp(16px,3vw,28px);
+    border-radius:16px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border:1px solid var(--panel-border,rgba(0,0,0,.08));
+    background: var(--seo-bg, rgba(255,255,255,.60));
+    box-shadow: 0 6px 24px rgba(0,0,0,.06);
+}
+html[data-theme="dark"] .seo-text{
+    background: rgba(20,20,22,.55);
+    border-color: rgba(255,255,255,.06);
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+.seo-text .seo-container{color:var(--seo-fg,#1b1d22)}
+html[data-theme="dark"] .seo-text .seo-container{color:#e8eaed}
+.seo-text h2{
+    font-size: clamp(20px,2.4vw,28px);
+    line-height:1.25;margin:0 0 12px;letter-spacing:.2px;font-weight:700;
+}
+.seo-text p{margin:0 0 12px;line-height:1.65;opacity:.95}
+.seo-text .seo-list{margin:10px 0 14px 0;padding-left:1.1em;display:grid;gap:6px}
+.seo-text .seo-list li{list-style:disc;line-height:1.6;opacity:.95}
+.seo-text a{color:#2563eb;text-decoration:none;border-bottom:1px dashed currentColor}
+html[data-theme="dark"] .seo-text a{color:#7aa2ff}
+.seo-text a:hover{border-bottom-style:solid}
