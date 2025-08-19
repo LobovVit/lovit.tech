@@ -13,8 +13,8 @@
 }
 
 [data-theme="dark"]{
-    --surface:rgba(28,28,30,.55);
-    --surface-strong:rgba(28,28,30,.78);
+    --surface: rgba(44, 44, 46, 0.7);         /* было 28,28,30 */
+    --surface-strong: rgba(58, 58, 60, 0.85); /* было 28,28,30 */
     --text:#f2f2f7;
     --muted:#a1a1a6;
     --accent:#0a84ff;
