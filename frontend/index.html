@@ -1,80 +1,131 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru" data-theme="light">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>lovit.tech</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Digital-studia LV</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<header>
-    <a class="brand" href="/" aria-label="lovit.tech">
-        <img id="logo" class="logo" src="images/logo-light.png" alt="LV logo" />
-    </a>
+<!-- Фиксированный анимированный фон -->
+<div id="bg"></div>
 
-    <div class="header-actions">
-        <button class="chip tile" data-target="adv" title="Реклама">📣</button>
-        <button class="chip tile" data-target="audit" title="Аудит">🖊️</button>
-        <button class="chip tile" data-target="sites" title="Сайты">🧩</button>
-        <button class="chip tile" data-target="mobile" title="Мобильные">📱</button>
-
-        <button id="theme-toggle" class="chip chip--wide" type="button" aria-label="Сменить тему">…</button>
-        <button id="login-btn" class="chip chip--wide" type="button">Войти</button>
+<header class="site-header">
+    <div class="header-left">
+        <a class="logo" href="/">
+            <img id="logoImg" alt="LV" src="images/logo-light.png" width="36" height="36" />
+        </a>
+        <div class="brand" aria-label="Digital-studia LV">
+            <span class="brand-text">Digital-studia&nbsp;LV</span>
+        </div>
     </div>
+
+    <nav class="header-actions" aria-label="Главная навигация">
+        <button class="pill" data-goto="advertising">Реклама</button>
+        <button class="pill" data-goto="audit">Аудит</button>
+        <button class="pill" data-goto="sites">Сайты</button>
+        <button class="pill" data-goto="mobile">Мобильные</button>
+
+        <div class="spacer" style="--spacer:56px;"></div>
+
+        <a href="https://t.me/yourusername" target="_blank" class="tile social-link">Telegram</a>
+        <a href="https://wa.me/yourphonenumber" target="_blank" class="tile social-link">WhatsApp</a>
+
+        <div class="spacer" style="--spacer:56px;"></div>
+
+        <button id="themeToggle" class="icon-btn" title="Тема">
+            <span class="icon theme"></span>
+        </button>
+
+        <button id="openAuth" class="icon-btn" title="Войти">
+            <span class="icon user"></span>
+        </button>
+    </nav>
 </header>
 
-<main>
-    <section id="adv" class="section-block"><h2>Реклама</h2><p>Контент блока.</p></section>
-    <section id="audit" class="section-block"><h2>Аудит рекламных кампаний</h2><p>Контент блока.</p></section>
-    <section id="sites" class="section-block"><h2>Сайты</h2><p>Контент блока.</p></section>
-    <section id="mobile" class="section-block"><h2>Мобильные приложения</h2><p>Контент блока.</p></section>
+<main class="content">
+    <!-- Плитки: красиво «падают» сверху при загрузке -->
+    <section class="tiles" id="tiles">
+        <a class="tile" style="--i:0" href="#advertising">
+            <h3>Реклама</h3>
+            <p>Настройка и оптимизация рекламных кампаний.</p>
+        </a>
+        <a class="tile" style="--i:1" href="#audit">
+            <h3>Аудит</h3>
+            <p>Разберём текущую стратегию, найдём точки роста.</p>
+        </a>
+        <a class="tile" style="--i:2" href="#sites">
+            <h3>Сайты</h3>
+            <p>Современные, быстрые и удобные сайты.</p>
+        </a>
+        <a class="tile" style="--i:3" href="#mobile">
+            <h3>Мобильные приложения</h3>
+            <p>iOS/Android — от прототипа до релиза.</p>
+        </a>
+    </section>
+
+    <!-- Привязанные блоки-цели (якоря) -->
+    <section id="advertising" class="block">
+        <h2>Реклама</h2>
+        <p>Полный цикл: исследование, запуск, масштабирование.</p>
+    </section>
+    <section id="audit" class="block">
+        <h2>Аудит</h2>
+        <p>Прозрачный разбор метрик и рекомендаций.</p>
+    </section>
+    <section id="sites" class="block">
+        <h2>Сайты</h2>
+        <p>Лендинги, корпоративные и интернет-магазины.</p>
+    </section>
+    <section id="mobile" class="block">
+        <h2>Мобильные приложения</h2>
+        <p>Нативные и кросс-платформенные решения.</p>
+    </section>
 </main>
 
-<!-- Модалка авторизации -->
-<div id="auth-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="modal__dialog">
-        <button id="auth-close" class="modal__close" aria-label="Закрыть">✕</button>
-
-        <div class="tabs" role="tablist">
-            <button class="tab active" data-tab="login"  role="tab" aria-selected="true">Вход</button>
-            <button class="tab"         data-tab="signup" role="tab" aria-selected="false">Регистрация</button>
+<!-- Модалка авторизации/регистрации -->
+<div class="modal" id="authModal" aria-hidden="true">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+        <div class="modal__header">
+            <h3 id="authTitle">Аккаунт</h3>
+            <button class="icon-btn" data-close title="Закрыть"><span class="icon close"></span></button>
         </div>
 
-        <form id="form-login" class="form active" autocomplete="on">
-            <div class="field">
-                <label for="login-email">E-mail</label>
-                <input id="login-email" type="email" name="email" placeholder="you@example.com" required />
-            </div>
-            <div class="field">
-                <label for="login-pass">Пароль</label>
-                <input id="login-pass" type="password" name="password" placeholder="••••••••" required />
-            </div>
-            <button class="btn btn-primary btn-full" type="submit">Войти</button>
-            <div class="form-hint">Нет аккаунта?
-                <a href="#" data-tab-switch="signup">Зарегистрироваться</a>
-            </div>
-        </form>
+        <div class="tabs" role="tablist" aria-label="Вход и регистрация">
+            <button class="tab active" role="tab" aria-selected="true" data-tab="login" id="tab-login">Вход</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="signup" id="tab-signup">Регистрация</button>
+        </div>
 
-        <form id="form-signup" class="form" autocomplete="on">
-            <div class="field">
-                <label for="signup-name">Имя</label>
-                <input id="signup-name" type="text" name="name" placeholder="Ваше имя" required />
-            </div>
-            <div class="field">
-                <label for="signup-email">E-mail</label>
-                <input id="signup-email" type="email" name="email" placeholder="you@example.com" required />
-            </div>
-            <div class="field">
-                <label for="signup-pass">Пароль</label>
-                <input id="signup-pass" type="password" name="password" placeholder="Минимум 6 символов" required />
-            </div>
-            <button class="btn btn-primary btn-full" type="submit">Создать аккаунт</button>
-            <div class="form-hint">Уже есть аккаунт?
-                <a href="#" data-tab-switch="login">Войти</a>
-            </div>
-        </form>
+        <div class="tabpanes">
+            <form class="pane active" id="pane-login" role="tabpanel" aria-labelledby="tab-login">
+                <label>
+                    Email
+                    <input type="email" placeholder="you@example.com" required />
+                </label>
+                <label>
+                    Пароль
+                    <input type="password" placeholder="••••••••" required />
+                </label>
+                <button class="pill wide" type="submit">Войти</button>
+            </form>
 
-        <div id="auth-message" class="auth-message" aria-live="polite"></div>
+            <form class="pane" id="pane-signup" role="tabpanel" aria-labelledby="tab-signup">
+                <label>
+                    Имя
+                    <input type="text" placeholder="Ваше имя" required />
+                </label>
+                <label>
+                    Email
+                    <input type="email" placeholder="you@example.com" required />
+                </label>
+                <label>
+                    Пароль
+                    <input type="password" placeholder="Минимум 8 символов" required />
+                </label>
+                <button class="pill wide" type="submit">Зарегистрироваться</button>
+            </form>
+        </div>
     </div>
 </div>
 
