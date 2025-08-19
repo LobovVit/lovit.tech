@@ -75,23 +75,20 @@ loginBtn?.addEventListener('click', (e) => {
 modalClose?.addEventListener('click', closeModal);
 modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-// клик по «Регистрация/Войти» внутри подсказок
+// --- единый обработчик для табов и кнопок ---
 document.addEventListener('click', (e) => {
-    const a = e.target.closest('[data-tab-switch]');
-    if (!a) return;
-    e.preventDefault();
-    openModal();
-    setTab(a.getAttribute('data-tab-switch') || 'login');
-});
+    const tabSwitch = e.target.closest('[data-tab-switch]');
+    const openAuth  = e.target.closest('[data-open-auth]');
 
-// кнопки снаружи, которые хотят сразу открыть модалку на нужной вкладке
-document.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-open-auth]');
-    if (!btn) return;
-    e.preventDefault();
-    openModal();
-    const tab = btn.getAttribute('data-tab') || 'login';
-    setTab(tab);
+    if (tabSwitch) {
+        e.preventDefault();
+        openModal();
+        setTab(tabSwitch.getAttribute('data-tab-switch') || 'login');
+    } else if (openAuth) {
+        e.preventDefault();
+        openModal();
+        setTab(openAuth.getAttribute('data-tab') || 'login');
+    }
 });
 
 // ===== API helper (заглушка)
