@@ -61,6 +61,11 @@ header h1{ flex:1; margin:0; font-size:1.25rem; }
 .header-actions{ display:flex; gap:.5rem; align-items:center; }
 #theme-toggle{ background:none; border:none; font-size:1.1rem; cursor:pointer; }
 
+.logo {
+    height: 32px;
+    width: auto;
+}
+
 /* плитки */
 .tiles{ display:flex; gap:.75rem; }
 .tile{
@@ -124,7 +129,7 @@ main{ padding:6rem 1rem 2rem; }
     background:transparent; font-weight:600; color:inherit;
 }
 .tab.active{ background:rgba(255,255,255,.7); color:#000; }
-[data-theme="dark"] .tab.active{ background:rgba(58,58,60,.85); color:#fff; }
+[data-theme="dark"] .tab.active{ background:rgba(158,158,160,.185); color:#fff; }
 
 /* формы */
 .form{ display:none; gap:.75rem; flex-direction:column; }

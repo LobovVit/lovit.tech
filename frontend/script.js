@@ -6,6 +6,11 @@ const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
 function applyTheme(mode) {
     document.documentElement.setAttribute('data-theme', mode === 'dark' ? 'dark' : 'light');
     localStorage.setItem('theme', mode);
+
+    const logo = document.getElementById('logo');
+    if (logo) {
+        logo.src = mode === 'dark' ? 'images/logo-dark.png' : 'images/logo-light.png';
+    }
 }
 applyTheme(savedTheme || (prefersDark.matches ? 'dark' : 'light'));
 
