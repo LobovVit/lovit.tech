@@ -1,43 +1,33 @@
+name: lovit-site
 services:
-  tarantool-router:
-    build:
-      context: ./tarantool
-    container_name: tarantool-index
-    ports:
-      - "3301:3301"
-      - "8081:8081"
-    networks:
-      - app-net
-
-  tarantool-storage-a:
-    build:
-      context: ./tarantool
-    container_name: tarantool-storage-a
-    environment:
-      - TARANTOOL_INSTANCE=storage-a
-    networks:
-      - app-net
-
-  tarantool-storage-b:
-    build:
-      context: ./tarantool
-    container_name: tarantool-storage-b
-    environment:
-      - TARANTOOL_INSTANCE=storage-b
-    networks:
-      - app-net
-
-  go-backend:
-    build:
-      context: ./backend
-    container_name: go-backend
-    ports:
-      - "8080:8080"
-    networks:
-      - app-net
-    depends_on:
-      - tarantool-router
-
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    networks: [private]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+  web:
+    image: nginx:1.28-alpine
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./deploy/web.conf:/etc/nginx/conf.d/default.conf:ro
+    networks: [private, homelab]
+    depends_on: [backend]
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1/ping]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: homelab
+      traefik.http.routers.lovit-site.rule: "Host(`lovit.tech`) || Host(`www.lovit.tech`)"
+      traefik.http.routers.lovit-site.entrypoints: web
+      traefik.http.services.lovit-site.loadbalancer.server.port: "80"
+      com.centurylinklabs.watchtower.enable: "false"
 networks:
-  app-net:
-    driver: bridge
+  private:
+    internal: true
+  homelab:
+    external: true

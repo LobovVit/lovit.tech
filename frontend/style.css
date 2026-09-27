@@ -144,7 +144,7 @@ body{
 }
 
 /* Модалка */
-.modal{position:fixed;inset:0;display:none}
+.modal{position:fixed;inset:0;z-index:2000;display:none}
 .modal.open{display:block}
 .modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px)}
 .modal__dialog{
@@ -164,7 +164,7 @@ input{height:40px;border-radius:10px;border:1px solid rgba(0,0,0,.15);background
 .pill.wide{width:100%}
 
 /* Мобильный */
-@media (max-width:920px){
+@media (max-width:1200px){
     .logo img{height:32px}
     .pill-l{display:none}
 }

@@ -1,12 +1,7 @@
 name: Deploy Backend (Docker via VPS Proxy)
 
 on:
-  push:
-    branches: [ develop ]
-    paths:
-      - "backend/**"
-      - "docker-compose.backend.yml"
-      - ".github/workflows/deploy-backend-docker.yml"
+  workflow_dispatch:
 
 jobs:
   deploy:

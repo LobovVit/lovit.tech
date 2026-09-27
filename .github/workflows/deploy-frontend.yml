@@ -1,11 +1,7 @@
 name: Deploy Frontend (static)
 
 on:
-  push:
-    branches: [ "develop" ]
-    paths:
-      - "frontend/**"
-      - ".github/workflows/deploy-frontend.yml"
+  workflow_dispatch:
 
 jobs:
   deploy:
