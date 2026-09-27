@@ -114,8 +114,10 @@
         try {
             const response = await fetch('/auth/logout', {method:'POST'});
             if (!response.ok) throw new Error('logout');
-            await refreshSession();
+            const {logoutUrl} = await response.json();
+            window.location.assign(logoutUrl);
         } catch { document.getElementById('authStatus').textContent = 'Не удалось выйти. Попробуйте ещё раз.'; }
     });
+    window.addEventListener("focus", refreshSession);
     refreshSession();
 })();

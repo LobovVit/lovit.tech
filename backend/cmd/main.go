@@ -26,6 +26,7 @@ func main() {
 	mux.HandleFunc("/auth/callback", sso.Callback)
 	mux.HandleFunc("/auth/me", sso.Me)
 	mux.HandleFunc("/auth/logout", sso.Logout)
+	mux.HandleFunc("/auth/backchannel-logout", sso.Backchannel)
 	log.Println("Backend started on :8080")
 	if err := (&http.Server{Addr: ":8080", Handler: mux, ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second}).ListenAndServe(); err != nil {
 		log.Fatal(err)

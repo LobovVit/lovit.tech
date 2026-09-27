@@ -73,3 +73,7 @@ go -C backend vet ./...
 node --check frontend/script.js
 curl -f https://lovit.tech/ping
 ```
+
+Общий выход использует OIDC end-session и проверенный подписанный back-channel logout.
+Кнопка завершает вход в подключённых сервисах текущего браузера. На других устройствах
+сессии сохраняются. Реестр LOVIT находится в памяти: после перезапуска нужен новый SSO.
