@@ -9,8 +9,6 @@
     const modal    = document.getElementById('authModal');
 
     const closeEls = modal.querySelectorAll('[data-close]');
-    const tabs     = modal.querySelectorAll('.tab');
-    const panes    = modal.querySelectorAll('.pane');
 
     /* ---------- Фавиконки по теме ---------- */
     function getOrCreateLink(rel, sizes) {
@@ -25,21 +23,15 @@
     }
 
     function setFavicon(theme) {
-        // Положи файлы:
-        // images/favicon-light-32.png, images/favicon-dark-32.png
-        // images/favicon-light-180.png, images/favicon-dark-180.png
-        const isDark = theme === 'dark';
-        const ts = Date.now(); // анти-кэш
-
-        const icon32  = isDark ? 'images/favicon-dark-32.png'  : 'images/favicon-light-32.png';
-        const apple180= isDark ? 'images/favicon-dark-180.png' : 'images/favicon-light-180.png';
+        const icon32 = 'icons/favicon-light-32.png';
+        const apple180 = 'icons/favicon-light-180.png';
 
         const iconLink   = getOrCreateLink('icon', '32x32');
         iconLink.type    = 'image/png';
-        iconLink.href    = `${icon32}?v=${ts}`;
+        iconLink.href    = icon32;
 
         const appleLink  = getOrCreateLink('apple-touch-icon', '180x180');
-        appleLink.href   = `${apple180}?v=${ts}`;
+        appleLink.href   = apple180;
 
         // Для старых браузеров оставим generic <link rel="icon"> без sizes
         const genericIcon = document.querySelector('link[rel="icon"]:not([sizes])') || (() => {
@@ -49,7 +41,7 @@
             return l;
         })();
         genericIcon.type = 'image/png';
-        genericIcon.href = `${icon32}?v=${ts}`;
+        genericIcon.href = icon32;
     }
 
     /* ---------- Тема ---------- */
@@ -108,22 +100,24 @@
     });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('open'); });
 
-    /* ---------- Вкладки (надёжно в Safari) ---------- */
-    function setTab(name){
-        tabs.forEach(t => {
-            const active = t.getAttribute('data-tab') === name;
-            t.classList.toggle('active', active);
-            t.setAttribute('aria-selected', String(active));
-        });
-        panes.forEach(p => {
-            const show = p.id === 'pane-' + name;
-            p.classList.toggle('active', show);
-            if (show) p.querySelector('input')?.focus();
-        });
+    async function refreshSession() {
+        try {
+            const response = await fetch('/auth/me', {cache: 'no-store'});
+            if (!response.ok) throw new Error('session');
+            const {authenticated} = await response.json();
+            document.getElementById('signedIn').hidden = !authenticated;
+            document.getElementById('signedOut').hidden = authenticated;
+            openAuth.querySelector('.pill-label').textContent = authenticated ? 'Аккаунт' : 'Войти';
+        } catch { document.getElementById('authStatus').textContent = 'Не удалось проверить вход. Попробуйте ещё раз.'; }
     }
-    tabs.forEach(tab => tab.addEventListener('click', e => {
-        e.preventDefault();
-        setTab(tab.getAttribute('data-tab'));
-    }));
-    setTab('login');
+    document.getElementById('logout').addEventListener('click', async () => {
+        try {
+            const response = await fetch('/auth/logout', {method:'POST'});
+            if (!response.ok) throw new Error('logout');
+            const {logoutUrl} = await response.json();
+            window.location.assign(logoutUrl);
+        } catch { document.getElementById('authStatus').textContent = 'Не удалось выйти. Попробуйте ещё раз.'; }
+    });
+    window.addEventListener("focus", refreshSession);
+    refreshSession();
 })();
