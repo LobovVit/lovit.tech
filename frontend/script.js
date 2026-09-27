@@ -100,4 +100,22 @@
     });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('open'); });
 
+    async function refreshSession() {
+        try {
+            const response = await fetch('/auth/me', {cache: 'no-store'});
+            if (!response.ok) throw new Error('session');
+            const {authenticated} = await response.json();
+            document.getElementById('signedIn').hidden = !authenticated;
+            document.getElementById('signedOut').hidden = authenticated;
+            openAuth.querySelector('.pill-label').textContent = authenticated ? 'Аккаунт' : 'Войти';
+        } catch { document.getElementById('authStatus').textContent = 'Не удалось проверить вход. Попробуйте ещё раз.'; }
+    }
+    document.getElementById('logout').addEventListener('click', async () => {
+        try {
+            const response = await fetch('/auth/logout', {method:'POST'});
+            if (!response.ok) throw new Error('logout');
+            await refreshSession();
+        } catch { document.getElementById('authStatus').textContent = 'Не удалось выйти. Попробуйте ещё раз.'; }
+    });
+    refreshSession();
 })();

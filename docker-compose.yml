@@ -3,7 +3,12 @@ services:
   backend:
     build: ./backend
     restart: unless-stopped
-    networks: [private]
+    networks: [private, outbound]
+    environment:
+      OIDC_ISSUER: ${OIDC_ISSUER:?required}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:?required}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?required}
+      OIDC_REDIRECT_URL: https://lovit.tech/auth/callback
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
   web:
@@ -27,6 +32,7 @@ services:
       traefik.http.services.lovit-site.loadbalancer.server.port: "80"
       com.centurylinklabs.watchtower.enable: "false"
 networks:
+  outbound: {}
   private:
     internal: true
   homelab:
